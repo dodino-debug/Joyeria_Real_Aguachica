@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof titulo !== 'undefined' ? titulo : 'Real Joyería Aguachica' %></title>
+
+  <link rel="icon" type="image/png" href="/image/favicon.png?v=3">
+
+  <!-- Tailwind CSS vía CDN con configuración de paleta personalizada -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            esmeralda: {
+              DEFAULT: '#053B29',
+              dark: '#03261A',
+              light: '#0A5C40',
+              accent: '#10B981'
+            },
+            dorado: {
+              DEFAULT: '#D4AF37',
+              dark: '#B38F22',
+              light: '#F3E5AB'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-gray-900 font-sans antialiased">
+
+<% 
+  const menuLinks = [
+    { text: 'Inicio', url: '/', icon: '👑' },
+    { text: 'Catálogo', url: '/catalogo', icon: '💎' },
+    { text: 'Esmeraldas', url: '/esmeraldas', icon: '💚' },
+    { text: 'Personaliza tu joya', url: '/personaliza', icon: '✨' },
+    { text: 'Financiación', url: '/financiacion', icon: '💳' },
+    { text: 'Contacto', url: '/contacto', icon: '📍' }
+  ];
+%>
+  
+<!-- Barra superior de anuncios -->
+<div class="bg-esmeralda-dark text-dorado-light text-xs py-2 text-center font-light tracking-widest uppercase px-4 border-b border-dorado/20">
+  <span>✨ Financiación directa disponible | Envíos seguros a Aguachica💎</span>
+</div>
+
+<!-- Encabezado / Navegación principal -->
+<header class="bg-esmeralda-dark text-white border-b border-dorado/30 sticky top-0 z-50 shadow-lg">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-20">
+
+      <!-- LOGO & MARCA -->
+      <a href="/" class="flex items-center gap-3 group">
+        <img src="/image/logo.jpg" alt="Real Joyería Logo" class="h-12 w-auto rounded-md border border-dorado/40 shadow-sm object-contain">
+        <div class="text-left">
+          <span class="block text-lg sm:text-xl font-serif font-bold tracking-wider text-dorado group-hover:text-white transition-colors uppercase">REAL JOYERÍA</span>
+          <span class="block text-[9px] sm:text-[10px] tracking-[0.25em] text-gray-300 font-light uppercase -mt-1">Joyas de Calidad · Aguachica</span>
+        </div>
+      </a>
+
+      <!-- MENÚ ESCRITORIO (PC) -->
+      <nav class="hidden md:flex items-center space-x-6 text-xs font-semibold uppercase tracking-wider">
+        <% menuLinks.forEach(link => { %>
+          <a href="<%= link.url %>" class="hover:text-dorado transition-colors flex items-center gap-1.5">
+            <span><%= link.icon %></span> <%= link.text %>
+          </a>
+        <% }) %>
+      </nav>
+
+      <!-- BOTÓN WHATSAPP & BOTÓN MENÚ MÓVIL -->
+      <div class="flex items-center gap-3">
+        <!-- Botón de WhatsApp -->
+        <a href="https://wa.me/<%= typeof whatsappNumber !== 'undefined' ? whatsappNumber : '' %>" target="_blank" class="hidden sm:inline-flex items-center gap-2 bg-dorado hover:bg-dorado-dark text-esmeralda-dark font-bold text-xs px-4 py-2 rounded-full shadow-md transition-all uppercase tracking-wider">
+          <span>Comprar por WhatsApp</span>
+        </a>
+
+        <!-- Botón Menú Hamburguesa -->
+        <button id="mobile-menu-btn" type="button" class="md:hidden text-dorado hover:text-white focus:outline-none p-2">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MENÚ MÓVIL DESPLEGABLE -->
+  <div id="mobile-menu" class="hidden md:hidden bg-esmeralda border-t border-dorado/20">
+    <div class="flex flex-col space-y-3 px-4 py-4 text-xs font-semibold uppercase tracking-wider">
+      <% menuLinks.forEach(link => { %>
+        <a href="<%= link.url %>" class="hover:text-dorado transition-colors flex items-center gap-2 py-1">
+          <span><%= link.icon %></span> <%= link.text %>
+        </a>
+      <% }) %>
+      
+      <!-- Botón WhatsApp dentro del menú desplegable móvil -->
+      <div class="pt-2 sm:hidden border-t border-dorado/10">
+        <a href="https://wa.me/<%= typeof whatsappNumber !== 'undefined' ? whatsappNumber : '' %>" target="_blank" class="flex items-center justify-center gap-2 bg-dorado hover:bg-dorado-dark text-esmeralda-dark font-bold text-xs py-2 rounded-full shadow-md transition-all uppercase tracking-wider w-full">
+          <span>Comprar por WhatsApp</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+    document.getElementById('mobile-menu')?.classList.toggle('hidden');
+  });
+</script>
+
+</body>
+</html>

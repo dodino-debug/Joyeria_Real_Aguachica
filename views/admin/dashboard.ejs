@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Admin — Real Joyería</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            esmeralda: { DEFAULT: '#053B29', dark: '#022117', light: '#0A5C41' },
+            dorado: { DEFAULT: '#D4AF37', dark: '#AA8A22', light: '#E5C158' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col">
+
+  <!-- NAVBAR ADMIN -->
+  <header class="bg-esmeralda-dark text-white py-4 border-b border-dorado/30">
+    <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">👑</span>
+        <span class="font-serif font-bold text-dorado uppercase tracking-wider text-sm">Real Joyería · Panel</span>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <span class="text-gray-300">Hola, <strong class="text-dorado"><%= admin.nombre %></strong></span>
+        <a href="/admin/logout" class="bg-red-600/80 hover:bg-red-600 px-3 py-1.5 rounded-lg text-white font-semibold transition-colors">
+          Cerrar Sesión
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-8 flex-1 w-full space-y-6">
+
+    <!-- CABECERA DE ACCIONES -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+      <div>
+        <h1 class="text-2xl font-serif font-bold text-esmeralda">Inventario de Joyas</h1>
+        <p class="text-xs text-gray-500 mt-1">Gestiona los productos disponibles en la tienda pública</p>
+      </div>
+      <button onclick="document.getElementById('modal-nuevo').classList.remove('hidden')" class="bg-esmeralda hover:bg-esmeralda-light text-dorado font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center gap-2">
+        <span>➕</span> Agregar Nueva Joya
+      </button>
+    </div>
+
+    <!-- TABLA DE PRODUCTOS -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-esmeralda-dark text-dorado uppercase font-semibold border-b border-dorado/20">
+            <tr>
+              <th class="p-4">Imagen</th>
+              <th class="p-4">Nombre</th>
+              <th class="p-4">Categoría</th>
+              <th class="p-4">Material</th>
+              <th class="p-4">Precio</th>
+              <th class="p-4 text-center">Estado</th>
+              <th class="p-4 text-center">Acción</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% productos.forEach(prod => { %>
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="p-4">
+                  <img src="<%= prod.imagen %>" alt="<%= prod.nombre %>" class="w-12 h-12 object-cover rounded-lg border">
+                </td>
+                <td class="p-4 font-semibold text-gray-800">
+                  <%= prod.nombre %>
+                  <% if (prod.destacado) { %>
+                    <span class="ml-1 text-[10px] bg-dorado/20 text-dorado-dark px-1.5 py-0.5 rounded font-bold">Destacado</span>
+                  <% } %>
+                </td>
+                <td class="p-4 uppercase text-gray-600"><%= prod.categoria_slug %></td>
+                <td class="p-4 uppercase text-gray-600"><%= prod.material %></td>
+                <td class="p-4 font-bold text-esmeralda">
+                  <%= prod.precio ? '$' + Number(prod.precio).toLocaleString('es-CO') + ' COP' : 'A consultar' %>
+                </td>
+                <td class="p-4 text-center">
+                  <% if (prod.activo) { %>
+                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded-full">Activo</span>
+                  <% } else { %>
+                    <span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-1 rounded-full">Inactivo</span>
+                  <% } %>
+                </td>
+                <td class="p-4 text-center">
+                  <form action="/admin/productos/toggle/<%= prod.id %>" method="POST" class="inline">
+                    <button type="submit" class="text-[11px] font-semibold px-3 py-1 rounded-lg border transition-all <%= prod.activo ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-emerald-300 text-emerald-600 hover:bg-emerald-50' %>">
+                      <%= prod.activo ? 'Desactivar' : 'Activar' %>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL PARA AGREGAR PRODUCTO NUEVO -->
+  <div id="modal-nuevo" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-serif font-bold text-lg text-esmeralda">Agregar Joya al Catálogo</h3>
+        <button onclick="document.getElementById('modal-nuevo').classList.add('hidden')" class="text-gray-400 hover:text-red-500 font-bold text-lg">✕</button>
+      </div>
+
+      <form action="/admin/productos/nuevo" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-esmeralda mb-1">Nombre de la Joya</label>
+          <input type="text" name="nombre" required placeholder="Ej: Anillo Solitario Oro 18K" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Categoría</label>
+            <select name="categoria_slug" required class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+              <option value="anillos">Anillos</option>
+              <option value="cadenas-dijes">Cadenas y Dijes</option>
+              <option value="aretes">Aretes</option>
+              <option value="pulseras">Pulseras</option>
+              <option value="relojes">Relojes</option>
+              <option value="esmeraldas-muzo">Esmeraldas Muzo</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Material</label>
+            <select name="material" required class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+              <option value="oro">Oro 18K</option>
+              <option value="plata_925">Plata Ley 925</option>
+              <option value="esmeralda">Esmeralda Natural</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Público Objetivos</label>
+            <select name="para" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+              <option value="mujer">Mujer</option>
+              <option value="hombre">Hombre</option>
+              <option value="pareja">Pareja</option>
+              <option value="unisex">Unisex</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Precio (COP) — Opcional</label>
+            <input type="number" name="precio" placeholder="Ej: 1250000" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-esmeralda mb-1">Fotografía de la Joya</label>
+          <input type="file" name="imagen" accept="image/*" class="w-full p-2 border rounded-xl bg-gray-50">
+        </div>
+
+        <div>
+          <label class="block font-bold text-esmeralda mb-1">Descripción</label>
+          <textarea name="descripcion" rows="3" placeholder="Detalles de kilataje, peso, tipo de piedra, etc..." class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado"></textarea>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="checkbox" name="destacado" id="destacado" class="rounded">
+          <label for="destacado" class="font-bold text-gray-700">Mostrar como Pieza Destacada en Inicio</label>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="document.getElementById('modal-nuevo').classList.add('hidden')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl font-bold">Cancelar</button>
+          <button type="submit" class="px-5 py-2 bg-esmeralda hover:bg-esmeralda-light text-dorado font-bold rounded-xl">Guardar Joya</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

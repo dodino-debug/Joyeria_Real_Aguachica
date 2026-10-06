@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso Administrativo — Real Joyería</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            esmeralda: { DEFAULT: '#053B29', dark: '#022117', light: '#0A5C41' },
+            dorado: { DEFAULT: '#D4AF37', dark: '#AA8A22', light: '#E5C158' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-esmeralda-dark text-white min-h-screen flex items-center justify-center p-4">
+
+  <div class="bg-esmeralda p-8 rounded-3xl border border-dorado/40 shadow-2xl w-full max-w-md space-y-6">
+    <div class="text-center">
+      <span class="text-3xl block mb-2">👑</span>
+      <h1 class="text-2xl font-serif font-bold text-dorado">Panel de Control</h1>
+      <p class="text-xs text-gray-300 mt-1">Ingreso exclusivo para administración de catálogo</p>
+    </div>
+
+    <% if (error) { %>
+      <div class="bg-red-500/20 border border-red-500 text-red-200 text-xs p-3 rounded-xl text-center">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <form action="/admin/login" method="POST" class="space-y-4">
+      <div>
+        <label class="block text-xs uppercase font-semibold text-dorado mb-1">Usuario</label>
+        <input type="text" name="usuario" required placeholder="admin" class="w-full bg-esmeralda-dark text-white text-sm px-4 py-3 rounded-xl border border-dorado/30 focus:outline-none focus:border-dorado">
+      </div>
+
+      <div>
+        <label class="block text-xs uppercase font-semibold text-dorado mb-1">Contraseña</label>
+        <input type="password" name="password" required placeholder="••••••••" class="w-full bg-esmeralda-dark text-white text-sm px-4 py-3 rounded-xl border border-dorado/30 focus:outline-none focus:border-dorado">
+      </div>
+
+      <button type="submit" class="w-full bg-dorado hover:bg-dorado-dark text-esmeralda-dark font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg">
+        Iniciar Sesión
+      </button>
+    </form>
+
+    <div class="text-center pt-2">
+      <a href="/" class="text-xs text-gray-400 hover:text-dorado transition-colors">← Volver a la tienda</a>
+    </div>
+  </div>
+
+</body>
+</html>

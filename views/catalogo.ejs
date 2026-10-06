@@ -1,0 +1,146 @@
+<%- include('partials/header') %>
+
+<main class="bg-slate-50 min-h-screen py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Encabezado del Catálogo -->
+    <div class="mb-8 text-center md:text-left border-b border-gray-200 pb-6">
+      <h1 class="text-3xl font-serif font-bold text-esmeralda">Catálogo de Joyas Exclusivas</h1>
+      <p class="text-xs text-gray-500 mt-1">Explora nuestra colección en Oro 18K, Plata Ley 925 y Esmeraldas certificadas</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+      <!-- FILTROS (Panel Izquierdo) -->
+      <aside class="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm h-fit">
+        <form action="/catalogo" method="GET" class="space-y-6">
+
+          <!-- Buscador por texto -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">Buscar Joya</label>
+            <input type="text" name="buscar" value="<%= filtrosActivos.buscar || '' %>" placeholder="Ej: Anillo, Esmeralda..." class="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:border-dorado focus:ring-1 focus:ring-dorado">
+          </div>
+
+          <!-- Filtro por Categorías -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">Colección</label>
+            <select name="categoria" class="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:outline-none focus:border-dorado">
+              <option value="">Todas las colecciones</option>
+              <% categorias.forEach(cat => { %>
+                <option value="<%= cat.slug %>" <%= filtrosActivos.categoria === cat.slug ? 'selected' : '' %>>
+                  <%= cat.nombre %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- Filtro por Material -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">Material / Metal</label>
+            <select name="material" class="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:outline-none focus:border-dorado">
+              <option value="">Todos los materiales</option>
+              <option value="oro" <%= filtrosActivos.material === 'oro' ? 'selected' : '' %>>Oro 18K</option>
+              <option value="plata_925" <%= filtrosActivos.material === 'plata_925' ? 'selected' : '' %>>Plata Ley 925</option>
+              <option value="esmeralda" <%= filtrosActivos.material === 'esmeralda' ? 'selected' : '' %>>Esmeralda Natural</option>
+            </select>
+          </div>
+
+          <!-- Filtro por Público -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">Para quién</label>
+            <div class="space-y-1.5 text-xs text-gray-700">
+              <label class="flex items-center gap-2">
+                <input type="radio" name="publico" value="" <%= !filtrosActivos.publico ? 'checked' : '' %> class="text-dorado focus:ring-dorado">
+                <span>Todos</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="radio" name="publico" value="dama" <%= filtrosActivos.publico === 'dama' ? 'checked' : '' %> class="text-dorado focus:ring-dorado">
+                <span>Dama</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="radio" name="publico" value="caballero" <%= filtrosActivos.publico === 'caballero' ? 'checked' : '' %> class="text-dorado focus:ring-dorado">
+                <span>Caballero</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="pt-2 flex flex-col gap-2">
+            <button type="submit" class="w-full bg-esmeralda hover:bg-esmeralda-light text-dorado text-xs font-bold py-2.5 rounded-lg transition-colors uppercase tracking-wider">
+              Aplicar Filtros
+            </button>
+            <a href="/catalogo" class="w-full text-center text-[11px] text-gray-500 hover:text-esmeralda py-1">
+              Limpiar filtros
+            </a>
+          </div>
+
+        </form>
+      </aside>
+
+      <!-- LISTADO DE PRODUCTOS (3 Columnas) -->
+      <section class="lg:col-span-3">
+
+        <% if (productos.length === 0) { %>
+          <div class="bg-white p-12 text-center rounded-2xl border border-gray-200">
+            <p class="text-sm font-semibold text-gray-600">No se encontraron joyas con los filtros seleccionados.</p>
+            <a href="/catalogo" class="inline-block mt-4 text-xs bg-dorado text-esmeralda-dark px-4 py-2 rounded-full font-bold">Ver todo el catálogo</a>
+          </div>
+        <% } else { %>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <% productos.forEach(prod => { %>
+              <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden flex flex-col justify-between hover:border-dorado/50 transition-all hover:shadow-md">
+                
+                <!-- Imagen con enlace a ficha detallada -->
+                <a href="/producto/<%= prod.slug %>" class="relative aspect-square overflow-hidden bg-gray-100 block">
+                  <img src="<%= prod.imagen %>" alt="<%= prod.nombre %>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                  <div class="absolute top-2 left-2 flex flex-col gap-1">
+                    <% if (prod.material === 'oro') { %>
+                      <span class="bg-dorado text-esmeralda-dark text-[9px] font-bold uppercase px-2 py-0.5 rounded-full shadow">Oro 18K</span>
+                    <% } else if (prod.material === 'plata_925') { %>
+                      <span class="bg-slate-700 text-white text-[9px] font-bold uppercase px-2 py-0.5 rounded-full shadow">Plata 925</span>
+                    <% } else if (prod.material === 'esmeralda') { %>
+                      <span class="bg-emerald-800 text-emerald-100 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full shadow">Esmeralda</span>
+                    <% } %>
+                  </div>
+                </a>
+
+                <div class="p-4 flex-1 flex flex-col justify-between">
+                  <div>
+                    <!-- Título -->
+                    <a href="/producto/<%= prod.slug %>">
+                      <h3 class="font-serif text-xs font-semibold text-gray-900 line-clamp-2 hover:text-esmeralda transition-colors"><%= prod.nombre %></h3>
+                    </a>
+                  </div>
+
+                  <!-- Precio y WhatsApp -->
+                  <div class="mt-4 pt-2 border-t border-gray-100 flex items-center justify-between">
+                    <div>
+                      <% if (prod.precio !== null && prod.precio !== undefined && prod.precio !== '') { %>
+                        <span class="text-xs font-bold text-esmeralda">
+                          $<%= Number(prod.precio).toLocaleString('es-CO') %> COP
+                        </span>
+                      <% } else { %>
+                        <span class="text-[11px] font-semibold text-dorado-dark bg-dorado/10 px-2 py-0.5 rounded">Consultar</span>
+                      <% } %>
+                    </div>
+
+                    <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('Hola, me interesa la siguiente pieza del catálogo: ' + prod.nombre) %>" target="_blank" class="bg-esmeralda hover:bg-esmeralda-light text-dorado text-[11px] font-semibold px-3 py-1.5 rounded-full transition-colors">
+                      Consultar
+                    </a>
+                  </div>
+                </div>
+
+              </div>
+            <% }) %>
+          </div>
+
+        <% } %>
+
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

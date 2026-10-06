@@ -1,0 +1,31 @@
+{
+  "name": "joyeria_real_aguachica",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dodino-debug/Joyeria_Real_Aguachica.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/dodino-debug/Joyeria_Real_Aguachica/issues"
+  },
+  "homepage": "https://github.com/dodino-debug/Joyeria_Real_Aguachica#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^18.0.5",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "multer": "^2.4.0",
+    "mysql2": "^3.24.5",
+    "pg": "^8.23.1"
+  }
+}

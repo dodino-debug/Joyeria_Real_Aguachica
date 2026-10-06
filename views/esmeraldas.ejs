@@ -1,0 +1,43 @@
+<%- include('partials/header') %>
+
+<main class="bg-slate-200 min-h-screen">
+  <section class="relative bg-emerald-950 text-white py-16 overflow-hidden border-b border-dorado/30">
+    <div class="relative z-10 max-w-5xl mx-auto px-4 text-center space-y-3">
+      <span class="text-dorado text-xs font-bold uppercase tracking-[0.25em]">Origen Colombia · Boyacá</span>
+      <h1 class="text-3xl sm:text-4xl font-serif font-bold">Esmeraldas Naturales Certificadas</h1>
+      <p class="text-emerald-100 text-xs sm:text-sm max-w-xl mx-auto font-light">
+        Gemas seleccionadas directamente de las minas colombianas. Pureza, tono y brillo garantizado en cada pieza.
+      </p>
+    </div>
+  </section>
+
+  <section class="max-w-6xl mx-auto px-4 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div class="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm text-center">
+        <span class="text-2xl mb-2 block">💎</span>
+        <h3 class="font-serif font-bold text-sm text-esmeralda">100% Naturales</h3>
+        <p class="text-xs text-gray-500 mt-1">Sin tratamientos sintéticos ni alteraciones cromáticas.</p>
+      </div>
+      <div class="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm text-center">
+        <span class="text-2xl mb-2 block">📜</span>
+        <h3 class="font-serif font-bold text-sm text-esmeralda">Certificado de Autenticidad</h3>
+        <p class="text-xs text-gray-500 mt-1">Acompañadas de ficha técnica con origen y características de la gema.</p>
+      </div>
+      <div class="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm text-center">
+        <span class="text-2xl mb-2 block">👑</span>
+        <h3 class="font-serif font-bold text-sm text-esmeralda">Montura en Oro 18K</h3>
+        <p class="text-xs text-gray-500 mt-1">Diseños elegantes trabajados a mano por nuestros maestros joyeros.</p>
+      </div>
+    </div>
+
+    <div class="bg-esmeralda-dark text-white rounded-2xl p-8 text-center space-y-4 border border-dorado/30">
+      <h2 class="text-xl font-serif font-bold text-dorado">¿Buscas una esmeralda con características específicas?</h2>
+      <p class="text-xs text-gray-200 max-w-lg mx-auto">Te brindamos asesoría personalizada con nuestro inventario de gemas según quilates, corte y presupuesto.</p>
+      <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('Hola Real Joyería, deseo recibir asesoría sobre esmeraldas naturales.') %>" target="_blank" class="inline-block bg-dorado hover:bg-dorado-dark text-esmeralda-dark font-bold text-xs uppercase px-6 py-3 rounded-full transition-transform hover:scale-105">
+        Consultar Esmeraldas por WhatsApp
+      </a>
+    </div>
+  </section>
+</main>
+
+<%- include('partials/footer') %>

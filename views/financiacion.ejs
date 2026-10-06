@@ -1,0 +1,47 @@
+<%- include('partials/header') %>
+
+<main class="bg-slate-300 min-h-screen py-10">
+  <div class="max-w-4xl mx-auto px-4">
+    <div class="text-center mb-10">
+      <span class="text-dorado text-xs font-bold uppercase tracking-widest">Facilidades de Pago</span>
+      <h1 class="text-3xl font-serif font-bold text-esmeralda mt-1">Planes de Financiación y Plan Separó</h1>
+      <p class="text-xs text-gray-500 mt-2">Adquiere tus joyas en Oro de 18K o Plata Ley 925 con pagos a tu medida en Aguachica.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 bg-esmeralda/10 rounded-full flex items-center justify-center text-esmeralda font-bold mb-4">1</div>
+          <h2 class="text-lg font-serif font-bold text-esmeralda mb-2">Plan Separó Tradicional</h2>
+          <ul class="text-xs text-gray-600 space-y-2 mb-6">
+            <li>✓ Separa tu joya con una cuota inicial mínima.</li>
+            <li>✓ Plazos flexibles de 30 a 90 días para cancelar.</li>
+            <li>✓ Sin intereses ni cobros adicionales.</li>
+            <li>✓ Se congela el precio pactado desde el primer día.</li>
+          </ul>
+        </div>
+        <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('Hola, deseo más información sobre cómo separar una joya mediante Plan Separó.') %>" target="_blank" class="w-full text-center bg-esmeralda hover:bg-esmeralda-light text-dorado font-bold text-xs py-3 rounded-xl uppercase transition-colors">
+          Consultar Plan Separó
+        </a>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 bg-esmeralda/10 rounded-full flex items-center justify-center text-esmeralda font-bold mb-4">2</div>
+          <h2 class="text-lg font-serif font-bold text-esmeralda mb-2">Financiación Directa / Crédito</h2>
+          <ul class="text-xs text-gray-600 space-y-2 mb-6">
+            <li>✓ Aprobación rápida para clientes en Aguachica.</li>
+            <li>✓ Cuotas fijas mensuales según tu capacidad.</li>
+            <li>✓ Aplica para joyas de oro 18K y diseños personalizados.</li>
+            <li>✓ Requisitos mínimos para apertura de estudio.</li>
+          </ul>
+        </div>
+        <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('Hola, quiero consultar los requisitos para un crédito o financiación directa.') %>" target="_blank" class="w-full text-center bg-dorado hover:bg-dorado-dark text-esmeralda-dark font-bold text-xs py-3 rounded-xl uppercase transition-colors">
+          Solicitar Crédito Directo
+        </a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,71 @@
+<%- include('partials/header') %>
+
+<main class="bg-slate-300 min-h-screen py-10">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div class="text-center mb-8">
+      <span class="text-dorado text-xs font-bold uppercase tracking-widest">Fabricación a la medida</span>
+      <h1 class="text-3xl font-serif font-bold text-esmeralda mt-1">¿Tienes un diseño en mente?</h1>
+      <p class="text-xs text-gray-500 mt-2">Fabricamos tu joya soñada en Oro 18K o Plata Ley 925 en nuestro taller de Aguachica.</p>
+    </div>
+
+    <div class="bg-slate-150 p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm space-y-6">
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">1. Metal Base Preferido</label>
+        <select id="metal-select" class="w-full text-xs px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-dorado">
+          <option value="Oro 18K (Amarillo)">Oro 18 Kilates (Amarillo)</option>
+          <option value="Oro Blanco 18K">Oro Blanco 18K</option>
+          <option value="Plata Ley 925">Plata Ley 925</option>
+          <option value="Combinado (Oro 18K / Plata 925)">Combinado (Oro 18K y Plata 925)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">2. Piedra Preciosa o Gema</label>
+        <select id="piedra-select" class="w-full text-xs px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-dorado">
+          <option value="Esmeralda Natural Colombia">Esmeralda Natural Colombiana</option>
+          <option value="Circonia Suiza / Diamante">Circonia / Diamante de alta pureza</option>
+          <option value="Rubí / Zafiro">Rubí / Zafiro</option>
+          <option value="Sin piedra (Solo metal)">Sin piedra (Diseño solo en metal)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">3. Talla o Medidas aproximadas</label>
+        <input type="text" id="talla-input" placeholder="Ej: Talla 7 para anillo / Cadena de 50 cm" class="w-full text-xs px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-dorado">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">4. Detalles del Diseño / Grabado</label>
+        <textarea id="descripcion-input" rows="4" placeholder="Describe el diseño, iniciales, estilo solitario, o cualquier detalle especial..." class="w-full text-xs px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-dorado"></textarea>
+      </div>
+
+      <button id="send-custom-wa" class="w-full bg-esmeralda hover:bg-esmeralda-light text-dorado font-bold text-xs uppercase tracking-wider py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+        <span>Enviar propuesta por WhatsApp</span>
+      </button>
+
+    </div>
+
+  </div>
+</main>
+
+<script>
+  document.getElementById('send-custom-wa').addEventListener('click', () => {
+    const metal = document.getElementById('metal-select').value;
+    const piedra = document.getElementById('piedra-select').value;
+    const talla = document.getElementById('talla-input').value || 'Por definir';
+    const desc = document.getElementById('descripcion-input').value || 'Sin detalles adicionales';
+
+    const mensaje = `Hola Real Joyería Aguachica, quiero cotizar un diseño personalizado:\n\n` +
+                    `📌 Metal: ${metal}\n` +
+                    `💎 Piedra: ${piedra}\n` +
+                    `📐 Talla/Medida: ${talla}\n` +
+                    `✏️ Detalles: ${desc}`;
+
+    const url = `https://wa.me/<%= whatsappNumber %>?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
+  });
+</script>
+
+<%- include('partials/footer') %>

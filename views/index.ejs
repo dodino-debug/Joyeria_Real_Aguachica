@@ -1,0 +1,110 @@
+<%- include('partials/header') %>
+
+<main class="bg-slate-50">
+
+  <!-- HERO BANNER CON PALETA ESMERALDA Y DORADO -->
+  <section class="relative bg-esmeralda-dark text-white min-h-[500px] flex items-center overflow-hidden border-b border-dorado/30">
+    <div class="absolute inset-0 z-0 opacity-25 bg-cover bg-center" style="background-image: url('/image/logo.jpg');"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-esmeralda-dark via-esmeralda-dark/90 to-transparent z-0"></div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div class="max-w-xl space-y-5">
+        <span class="inline-block text-dorado font-medium text-xs tracking-[0.25em] uppercase border-b border-dorado/40 pb-1">
+          👑 Joyas de Calidad & Esmeraldas Naturales
+        </span>
+        
+        <h1 class="text-3xl sm:text-5xl font-serif font-bold tracking-tight text-white leading-tight">
+          Elegancia Real que perdura <span class="text-dorado italic font-normal">para siempre</span>
+        </h1>
+        
+        <p class="text-gray-300 text-sm sm:text-base font-light leading-relaxed">
+          Diseños exclusivos en Oro de 18K, Plata Ley 925 y Esmeraldas certificadas de Boyacá. Fabricación y personalización en Aguachica.
+        </p>
+
+        <div class="flex flex-wrap gap-4 pt-2">
+          <a href="/catalogo" class="bg-dorado hover:bg-dorado-dark text-esmeralda-dark font-bold px-7 py-3 rounded-full text-xs uppercase tracking-wider transition-transform hover:scale-105 shadow-lg">
+            Ver catálogo completo
+          </a>
+          <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('Hola Real Joyería, me interesa ver el catálogo de joyas disponibles.') %>" target="_blank" class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-dorado/50 font-medium px-7 py-3 rounded-full text-xs uppercase tracking-wider transition-all">
+            Asesoría Personalizada
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORÍAS -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="text-center max-w-xl mx-auto mb-8">
+      <h2 class="text-2xl font-serif font-bold text-esmeralda">Nuestras Colecciones</h2>
+      <p class="text-gray-500 text-xs mt-1">Joyas seleccionadas con los más altos estándares de calidad</p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <% categorias.forEach(cat => { %>
+        <a href="/catalogo?categoria=<%= cat.slug %>" class="group bg-white rounded-xl shadow-sm border border-gray-200/80 p-4 text-center transition-all hover:shadow-md hover:border-dorado/50 hover:-translate-y-1">
+          <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-esmeralda/10 flex items-center justify-center text-esmeralda font-serif font-bold text-lg group-hover:bg-esmeralda group-hover:text-dorado transition-colors">
+            <%= cat.nombre.charAt(0) %>
+          </div>
+          <h3 class="text-xs font-semibold text-gray-800"><%= cat.nombre %></h3>
+        </a>
+      <% }) %>
+    </div>
+  </section>
+
+  <!-- PRODUCTOS DESTACADOS -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 border-t border-gray-200">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-xl font-serif font-bold text-esmeralda">Piezas Destacadas</h2>
+        <p class="text-xs text-gray-500">Exclusividad y brillo único en Aguachica</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <% productos.forEach(prod => { %>
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden flex flex-col justify-between hover:border-dorado/50 transition-colors">
+          
+          <!-- Imagen enlazada a la ficha del producto -->
+          <a href="/producto/<%= prod.slug %>" class="relative aspect-square overflow-hidden bg-gray-100 block">
+            <img src="<%= prod.imagen %>" alt="<%= prod.nombre %>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+            <div class="absolute top-2 left-2 flex flex-col gap-1">
+              <% if (prod.material === 'oro') { %>
+                <span class="bg-dorado text-esmeralda-dark text-[9px] font-bold uppercase px-2 py-0.5 rounded-full shadow">Oro 18K</span>
+              <% } else if (prod.material === 'plata_925') { %>
+                <span class="bg-slate-700 text-white text-[9px] font-bold uppercase px-2 py-0.5 rounded-full shadow">Plata 925</span>
+              <% } %>
+            </div>
+          </a>
+
+          <div class="p-4 flex-1 flex flex-col justify-between">
+            <div>
+              <!-- Título enlazado a la ficha del producto -->
+              <a href="/producto/<%= prod.slug %>">
+                <h3 class="font-serif text-xs font-semibold text-gray-900 line-clamp-2 hover:text-esmeralda transition-colors"><%= prod.nombre %></h3>
+              </a>
+            </div>
+
+            <div class="mt-4 pt-2 border-t border-gray-100 flex items-center justify-between">
+              <div>
+                <% if (prod.precio) { %>
+                  <span class="text-xs font-bold text-esmeralda">$<%= prod.precio.toLocaleString('es-CO') %> COP</span>
+                <% } else { %>
+                  <span class="text-[11px] font-semibold text-dorado-dark bg-dorado/10 px-2 py-0.5 rounded">Consultar precio</span>
+                <% } %>
+              </div>
+
+              <!-- Botón que lleva a la ficha del producto -->
+              <a href="/producto/<%= prod.slug %>" class="bg-esmeralda hover:bg-esmeralda-light text-dorado text-[11px] font-semibold px-3 py-1.5 rounded-full transition-colors">
+                Ver Detalle
+              </a>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+
+</main>
+
+<%- include('partials/footer') %>

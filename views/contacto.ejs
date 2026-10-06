@@ -1,0 +1,38 @@
+<%- include('partials/header') %>
+
+<main class="bg-slate-300 min-h-screen py-10">
+  <div class="max-w-5xl mx-auto px-4">
+    <div class="text-center mb-10">
+      <span class="text-dorado text-xs font-bold uppercase tracking-widest">Atención al cliente</span>
+      <h1 class="text-3xl font-serif font-bold text-esmeralda mt-1">Visítanos o Contáctanos</h1>
+      <p class="text-xs text-gray-500 mt-2">Estamos listos para asesorarte en la elección o confección de tu joya ideal.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white p-6 rounded-2xl border border-gray-200 text-center shadow-sm">
+        <span class="text-3xl block mb-2">📍</span>
+        <h3 class="font-serif font-bold text-sm text-esmeralda mb-1">Ubicación Física</h3>
+        <p class="text-xs text-gray-600">Aguachica, Cesar — Colombia</p>
+        <p class="text-[11px] text-gray-400 mt-1">Atención presencial bajo cita o libre ingreso</p>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl border border-gray-200 text-center shadow-sm">
+        <span class="text-3xl block mb-2">💬</span>
+        <h3 class="font-serif font-bold text-sm text-esmeralda mb-1">WhatsApp Directo</h3>
+        <p class="text-xs text-gray-600">Respuesta rápida e inmediata</p>
+        <a href="https://wa.me/<%= whatsappNumber %>" target="_blank" class="inline-block mt-3 text-xs font-bold text-emerald-600 hover:underline">
+          Abrir chat de WhatsApp
+        </a>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl border border-gray-200 text-center shadow-sm">
+        <span class="text-3xl block mb-2">🕒</span>
+        <h3 class="font-serif font-bold text-sm text-esmeralda mb-1">Horarios de Atención</h3>
+        <p class="text-xs text-gray-600">Lunes a Sábado: 8:00 AM - 6:30 PM</p>
+        <p class="text-[11px] text-gray-400 mt-1">Domingos y festivos bajo previa cita</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>
