@@ -122,12 +122,9 @@
           <div>
             <label class="block font-bold text-esmeralda mb-1">Categoría</label>
             <select name="categoria_slug" required class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
-              <option value="anillos">Anillos</option>
-              <option value="cadenas-dijes">Cadenas y Dijes</option>
-              <option value="aretes">Aretes</option>
-              <option value="pulseras">Pulseras</option>
-              <option value="relojes">Relojes</option>
-              <option value="esmeraldas-muzo">Esmeraldas Muzo</option>
+              <% categorias.forEach(cat => { %>
+                <option value="<%= cat.slug %>"><%= cat.nombre %></option>
+              <% }) %>
             </select>
           </div>
 
@@ -160,7 +157,7 @@
 
         <div>
           <label class="block font-bold text-esmeralda mb-1">Fotografía de la Joya</label>
-          <input type="file" name="imagen" accept="image/*" class="w-full p-2 border rounded-xl bg-gray-50">
+          <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp" ... class="w-full p-2 border rounded-xl bg-gray-50">
         </div>
 
         <div>

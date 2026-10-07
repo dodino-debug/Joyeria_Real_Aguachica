@@ -3,6 +3,7 @@ const path = require('path');
 const session = require('express-session');
 const multer = require('multer');
 const db = require('./config/db'); // Conexión a PostgreSQL
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 const app = express();
@@ -10,17 +11,45 @@ const PORT = process.env.PORT || 3000;
 const WHATSAPP_NUMBER = process.env.WHATSAPP_NUMBER || '573000000000';
 
 // Configuración de almacenamiento de imágenes con Multer
+const EXTENSIONES_PERMITIDAS = ['.jpg', '.jpeg', '.png', '.webp'];
+const MIMES_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
+const TAMANO_MAX_IMAGEN = 8 * 1024 * 1024; // 8 MB
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, 'public/uploads'));
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname).toLowerCase();
     cb(null, 'joya-' + uniqueSuffix + ext);
   }
 });
-const upload = multer({ storage });
+
+const upload = multer({
+  storage,
+  limits: { fileSize: TAMANO_MAX_IMAGEN },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (EXTENSIONES_PERMITIDAS.includes(ext) && MIMES_PERMITIDOS.includes(file.mimetype)) {
+      return cb(null, true);
+    }
+    cb(new Error('Formato de imagen no permitido. Usa JPG, PNG o WEBP.'));
+  }
+});
+
+// Envuelve la subida para responder con un mensaje claro si falla
+const subirImagen = (req, res, next) => {
+  upload.single('imagen')(req, res, (err) => {
+    if (err) {
+      const mensaje = (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE')
+        ? 'La imagen supera el tamaño máximo de 8 MB.'
+        : (err.message || 'No se pudo subir la imagen.');
+      return res.status(400).send(mensaje);
+    }
+    next();
+  });
+};
 
 // Configuración de Vistas
 app.set('view engine', 'ejs');
@@ -32,8 +61,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Configuración de Sesión para el Admin
+if (!process.env.SESSION_SECRET) {
+  console.error('Falta SESSION_SECRET en el archivo .env. El servidor no se iniciará.');
+  process.exit(1);
+}
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'real_joyeria_secret_2026',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 1000 * 60 * 60 * 24 } // 24 horas
@@ -200,11 +234,29 @@ app.get('/admin/login', (req, res) => {
 app.post('/admin/login', async (req, res) => {
   const { usuario, password } = req.body;
   try {
+    if (typeof usuario !== 'string' || typeof password !== 'string') {
+      return res.render('admin/login', { error: 'Usuario o contraseña incorrectos' });
+    }
+
     const result = await db.query('SELECT * FROM usuarios_admin WHERE usuario = $1', [usuario]);
     if (result.rows.length > 0) {
       const admin = result.rows[0];
-      if (password === admin.password_hash) {
-        req.session.admin = admin;
+      const esHash = /^\$2[aby]\$/.test(admin.password_hash);
+      let valida = false;
+
+      if (esHash) {
+        valida = await bcrypt.compare(password, admin.password_hash);
+      } else if (password === admin.password_hash) {
+        // TEMPORAL: migra la contraseña en texto plano a hash en el primer login.
+        // Eliminar esta rama cuando el admin ya haya iniciado sesión una vez.
+        valida = true;
+        const nuevoHash = await bcrypt.hash(password, 12);
+        await db.query('UPDATE usuarios_admin SET password_hash = $1 WHERE id = $2', [nuevoHash, admin.id]);
+      }
+
+      if (valida) {
+        // Solo datos necesarios; nunca guardar el hash en la sesión
+        req.session.admin = { id: admin.id, usuario: admin.usuario, nombre: admin.nombre };
         return res.redirect('/admin');
       }
     }
@@ -224,19 +276,23 @@ app.get('/admin/logout', (req, res) => {
 // Dashboard Principal Admin (Listar joyas)
 app.get('/admin', requiereAdmin, async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM productos ORDER BY id DESC');
+    const [result, resCategorias] = await Promise.all([
+      db.query('SELECT * FROM productos ORDER BY id DESC'),
+      db.query('SELECT * FROM categorias ORDER BY id ASC')
+    ]);
     res.render('admin/dashboard', {
       admin: req.session.admin,
-      productos: result.rows
+      productos: result.rows,
+      categorias: resCategorias.rows
     });
   } catch (error) {
     console.error('Error cargando dashboard:', error);
     res.status(500).send('Error interno del servidor');
   }
-});
+});Ñ
 
 // Procesar Creación de Nueva Joya
-app.post('/admin/productos/nuevo', requiereAdmin, upload.single('imagen'), async (req, res) => {
+app.post('/admin/productos/nuevo', requiereAdmin, subirImagen, async (req, res) => {
   try {
     const { nombre, categoria_slug, material, para, precio, descripcion, destacado } = req.body;
     const slug = nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now();
