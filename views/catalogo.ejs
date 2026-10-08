@@ -6,7 +6,7 @@
     <!-- Encabezado del Catálogo -->
     <div class="mb-8 text-center md:text-left border-b border-gray-200 pb-6">
       <h1 class="text-3xl font-serif font-bold text-esmeralda">Catálogo de Joyas Exclusivas</h1>
-      <p class="text-xs text-gray-500 mt-1">Explora nuestra colección en Oro 18K, Plata Ley 925 y Esmeraldas certificadas</p>
+      <p class="text-xs text-gray-500 mt-1">Explora nuestra colección en Oro 18K, Plata Ley 925 y Esmeraldas</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -36,13 +36,12 @@
 
           <!-- Filtro por Material -->
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">Material / Metal</label>
-            <select name="material" class="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:outline-none focus:border-dorado">
-              <option value="">Todos los materiales</option>
-              <option value="oro" <%= filtrosActivos.material === 'oro' ? 'selected' : '' %>>Oro 18K</option>
-              <option value="plata_925" <%= filtrosActivos.material === 'plata_925' ? 'selected' : '' %>>Plata Ley 925</option>
-              <option value="esmeralda" <%= filtrosActivos.material === 'esmeralda' ? 'selected' : '' %>>Esmeralda Natural</option>
-            </select>
+              <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">Material / Metal</label>
+              <select name="material" class="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:outline-none focus:border-dorado">
+                <option value="">Todos los materiales</option>
+                <option value="oro" <%= filtrosActivos.material === 'oro' ? 'selected' : '' %>>Oro 18K</option>
+                <option value="plata_925" <%= filtrosActivos.material === 'plata_925' ? 'selected' : '' %>>Plata Ley 925</option>
+              </select>
           </div>
 
           <!-- Filtro por Público -->
@@ -54,12 +53,35 @@
                 <span>Todos</span>
               </label>
               <label class="flex items-center gap-2">
-                <input type="radio" name="publico" value="dama" <%= filtrosActivos.publico === 'dama' ? 'checked' : '' %> class="text-dorado focus:ring-dorado">
+                <input type="radio" name="publico" value="mujer" <%= filtrosActivos.publico === 'mujer' ? 'checked' : '' %> class="text-dorado focus:ring-dorado">
                 <span>Dama</span>
               </label>
               <label class="flex items-center gap-2">
-                <input type="radio" name="publico" value="caballero" <%= filtrosActivos.publico === 'caballero' ? 'checked' : '' %> class="text-dorado focus:ring-dorado">
+                <input type="radio" name="publico" value="hombre" <%= filtrosActivos.publico === 'hombre' ? 'checked' : '' %> class="text-dorado focus:ring-dorado">
                 <span>Caballero</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="radio" name="publico" value="ninos" <%= filtrosActivos.publico === 'ninos' ? 'checked' : '' %> class="text-dorado focus:ring-dorado">
+                <span>Niños</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Filtro por Esmeralda -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">Esmeralda</label>
+            <div class="space-y-1.5 text-xs text-gray-700">
+              <label class="flex items-center gap-2">
+                <input type="radio" name="piedra" value="" <%= !filtrosActivos.piedra ? 'checked' : '' %> class="text-dorado focus:ring-dorado">
+                <span>Todos</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="radio" name="piedra" value="con_esmeralda" <%= filtrosActivos.piedra === 'con_esmeralda' ? 'checked' : '' %> class="text-dorado focus:ring-dorado">
+                <span>Con esmeralda</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="radio" name="piedra" value="sin_esmeralda" <%= filtrosActivos.piedra === 'sin_esmeralda' ? 'checked' : '' %> class="text-dorado focus:ring-dorado">
+                <span>Sin esmeralda</span>
               </label>
             </div>
           </div>

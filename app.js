@@ -4,6 +4,7 @@ const session = require('express-session');
 const multer = require('multer');
 const db = require('./config/db'); // Conexión a PostgreSQL
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -85,7 +86,7 @@ const requiereAdmin = (req, res, next) => {
 app.get('/', async (req, res) => {
   try {
     const resProductos = await db.query('SELECT * FROM productos WHERE activo = TRUE AND destacado = TRUE LIMIT 4');
-    const resCategorias = await db.query('SELECT * FROM categorias ORDER BY id ASC');
+    const resCategorias = await db.query('SELECT * FROM categorias WHERE en_portada = TRUE ORDER BY orden ASC, id ASC');
 
     res.render('index', {
       titulo: 'Real Joyería Aguachica — Joyas que hacen especial cada momento',
@@ -102,7 +103,7 @@ app.get('/', async (req, res) => {
 // Ruta Catálogo con Filtros y PostgreSQL
 app.get('/catalogo', async (req, res) => {
   try {
-    const { buscar, categoria, material, publico } = req.query;
+    const { buscar, categoria, material, publico, piedra } = req.query;
 
     let query = 'SELECT * FROM productos WHERE activo = TRUE';
     const params = [];
@@ -126,9 +127,19 @@ app.get('/catalogo', async (req, res) => {
     }
 
     // 4. Filtro por Público (columna 'para' en la BD)
-    if (publico && publico.trim() !== '') {
+    if (publico === 'mujer' || publico === 'hombre') {
+      // Unisex y Pareja aparecen tanto en Dama como en Caballero
       params.push(publico);
-      query += ` AND para = $${params.length}`;
+      query += ` AND para IN ($${params.length}, 'unisex', 'pareja')`;
+    } else if (publico === 'ninos') {
+      query += ` AND para = 'ninos'`;
+    }
+
+    // 5. Filtro por Piedra: con o sin esmeralda
+    if (piedra === 'con_esmeralda') {
+      query += ` AND piedra = 'esmeralda'`;
+    } else if (piedra === 'sin_esmeralda') {
+      query += ` AND piedra IS DISTINCT FROM 'esmeralda'`;
     }
 
     query += ' ORDER BY id DESC';
@@ -136,7 +147,7 @@ app.get('/catalogo', async (req, res) => {
     // Ejecución de consultas en paralelo
     const [resProductos, resCategorias] = await Promise.all([
       db.query(query, params),
-      db.query('SELECT * FROM categorias ORDER BY id ASC')
+      db.query('SELECT * FROM categorias ORDER BY orden ASC, id ASC')
     ]);
 
     res.render('catalogo', {
@@ -147,7 +158,8 @@ app.get('/catalogo', async (req, res) => {
         buscar: buscar || '',
         categoria: categoria || '',
         material: material || '',
-        publico: publico || ''
+        publico: publico || '',
+        piedra: piedra || ''
       },
       whatsappNumber: WHATSAPP_NUMBER
     });
@@ -172,8 +184,11 @@ app.get('/producto/:slug', async (req, res) => {
 
     const producto = resProducto.rows[0];
     const resRelacionados = await db.query(
-      'SELECT * FROM productos WHERE id != $1 AND activo = TRUE LIMIT 3',
-      [producto.id]
+      `SELECT * FROM productos
+        WHERE id != $1 AND activo = TRUE
+        ORDER BY (categoria_slug = $2) DESC NULLS LAST, id DESC
+        LIMIT 3`,
+      [producto.id, producto.categoria_slug]
     );
 
     res.render('producto_detalle', {
@@ -278,7 +293,7 @@ app.get('/admin', requiereAdmin, async (req, res) => {
   try {
     const [result, resCategorias] = await Promise.all([
       db.query('SELECT * FROM productos ORDER BY id DESC'),
-      db.query('SELECT * FROM categorias ORDER BY id ASC')
+      db.query('SELECT * FROM categorias ORDER BY orden ASC, id ASC')
     ]);
     res.render('admin/dashboard', {
       admin: req.session.admin,
@@ -289,20 +304,25 @@ app.get('/admin', requiereAdmin, async (req, res) => {
     console.error('Error cargando dashboard:', error);
     res.status(500).send('Error interno del servidor');
   }
-});Ñ
+});
 
 // Procesar Creación de Nueva Joya
 app.post('/admin/productos/nuevo', requiereAdmin, subirImagen, async (req, res) => {
   try {
-    const { nombre, categoria_slug, material, para, precio, descripcion, destacado } = req.body;
+    const { nombre, categoria_slug, material, para, precio, descripcion, destacado, piedra, talla, disponibilidad } = req.body;
     const slug = nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now();
     const imagenUrl = req.file ? `/uploads/${req.file.filename}` : '/image/logo.jpg';
     const esDestacado = destacado === 'on' || destacado === 'true';
+    const PIEDRAS = ['esmeralda', 'rubi', 'zafiro', 'diamante', 'otra'];
+    const DISPONIBILIDADES = ['disponible', 'agotado', 'bajo_pedido'];
+    const piedraFinal = PIEDRAS.includes(piedra) ? piedra : null;
+    const disponibilidadFinal = DISPONIBILIDADES.includes(disponibilidad) ? disponibilidad : 'disponible';
+    const tallaFinal = (talla || '').split(',').map(t => t.trim()).filter(Boolean).join(', ').slice(0, 200) || null;
 
     await db.query(
-      `INSERT INTO productos (nombre, slug, categoria_slug, material, para, precio, imagen, descripcion, destacado, activo)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE)`,
-      [nombre, slug, categoria_slug, material, para, precio || null, imagenUrl, descripcion, esDestacado]
+      `INSERT INTO productos (nombre, slug, categoria_slug, material, para, precio, imagen, descripcion, destacado, activo, piedra, talla, disponibilidad)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10, $11, $12)`,
+      [nombre, slug, categoria_slug, material, para, precio || null, imagenUrl, descripcion, esDestacado, piedraFinal, tallaFinal, disponibilidadFinal]
     );
 
     res.redirect('/admin');
@@ -322,6 +342,125 @@ app.post('/admin/productos/toggle/:id', requiereAdmin, async (req, res) => {
     console.error('Error cambiando estado:', error);
     res.status(500).send('Error al actualizar');
   }
+});
+
+// ==========================================
+// EDITAR PRODUCTO
+// ==========================================
+const PIEDRAS_VALIDAS = ['esmeralda', 'rubi', 'zafiro', 'diamante', 'otra'];
+const DISPONIBILIDADES_VALIDAS = ['disponible', 'agotado', 'bajo_pedido'];
+const PUBLICOS_VALIDOS = ['mujer', 'hombre', 'ninos', 'pareja', 'unisex'];
+const MATERIALES_VALIDOS = ['oro', 'plata_925'];
+const txt = (v) => (typeof v === 'string' ? v.trim() : '');
+
+// Formulario de edición
+app.get('/admin/productos/:id/editar', requiereAdmin, async (req, res) => {
+  try {
+    const id = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) return res.redirect('/admin');
+
+    const [resProducto, resCategorias] = await Promise.all([
+      db.query('SELECT * FROM productos WHERE id = $1', [id]),
+      db.query('SELECT * FROM categorias ORDER BY orden ASC, id ASC')
+    ]);
+    if (resProducto.rows.length === 0) return res.redirect('/admin');
+
+    res.render('admin/editar', {
+      admin: req.session.admin,
+      producto: resProducto.rows[0],
+      categorias: resCategorias.rows,
+      error: null
+    });
+  } catch (error) {
+    console.error('Error cargando el formulario de edición:', error);
+    res.status(500).send('Error interno del servidor');
+  }
+});
+
+// Guardar cambios
+app.post('/admin/productos/:id/editar', requiereAdmin, subirImagen, async (req, res) => {
+  const id = Number.parseInt(req.params.id, 10);
+  if (!Number.isInteger(id)) return res.redirect('/admin');
+
+  try {
+    const [resProducto, resCategorias] = await Promise.all([
+      db.query('SELECT * FROM productos WHERE id = $1', [id]),
+      db.query('SELECT * FROM categorias ORDER BY orden ASC, id ASC')
+    ]);
+    if (resProducto.rows.length === 0) {
+      if (req.file) fs.unlink(req.file.path, () => {});
+      return res.redirect('/admin');
+    }
+    const actual = resProducto.rows[0];
+
+    const b = req.body;
+    const precioTxt = txt(b.precio);
+    const datos = {
+      nombre: txt(b.nombre),
+      categoria_slug: txt(b.categoria_slug),
+      material: txt(b.material),
+      para: txt(b.para),
+      precio: precioTxt === '' ? null : Number(precioTxt),
+      piedra: PIEDRAS_VALIDAS.includes(b.piedra) ? b.piedra : null,
+      talla: txt(b.talla).split(',').map(t => t.trim()).filter(Boolean).join(', ').slice(0, 200) || null,
+      disponibilidad: txt(b.disponibilidad),
+      descripcion: txt(b.descripcion) || null,
+      destacado: b.destacado === 'on',
+      activo: b.activo === 'on'
+    };
+
+    const errores = [];
+    if (!datos.nombre) errores.push('El nombre es obligatorio.');
+    if (!resCategorias.rows.some(c => c.slug === datos.categoria_slug)) errores.push('Elige una categoría válida.');
+    if (!MATERIALES_VALIDOS.includes(datos.material) && datos.material !== actual.material) errores.push('Material no válido.');
+    if (!PUBLICOS_VALIDOS.includes(datos.para)) errores.push('Público objetivo no válido.');
+    if (!DISPONIBILIDADES_VALIDAS.includes(datos.disponibilidad)) errores.push('Disponibilidad no válida.');
+    if (datos.precio !== null && (!Number.isFinite(datos.precio) || datos.precio < 0 || datos.precio > 9999999999)) {
+      errores.push('El precio no es válido.');
+    }
+
+    if (errores.length > 0) {
+      if (req.file) fs.unlink(req.file.path, () => {});
+      return res.status(400).render('admin/editar', {
+        admin: req.session.admin,
+        producto: { ...actual, ...datos },
+        categorias: resCategorias.rows,
+        error: errores.join(' ')
+      });
+    }
+
+    const imagenFinal = req.file ? `/uploads/${req.file.filename}` : actual.imagen;
+
+    await db.query(
+      `UPDATE productos
+          SET nombre = $1, categoria_slug = $2, material = $3, para = $4, precio = $5,
+              piedra = $6, talla = $7, disponibilidad = $8, descripcion = $9,
+              destacado = $10, activo = $11, imagen = $12
+        WHERE id = $13`,
+      [datos.nombre, datos.categoria_slug, datos.material, datos.para, datos.precio,
+       datos.piedra, datos.talla, datos.disponibilidad, datos.descripcion,
+       datos.destacado, datos.activo, imagenFinal, id]
+    );
+
+    // Si se subió una foto nueva, borra la anterior (solo si estaba en /uploads)
+    if (req.file && actual.imagen && actual.imagen.startsWith('/uploads/')) {
+      fs.unlink(path.join(__dirname, 'public/uploads', path.basename(actual.imagen)), () => {});
+    }
+
+    res.redirect('/admin');
+  } catch (error) {
+    console.error('Error editando producto:', error);
+    if (req.file) fs.unlink(req.file.path, () => {});
+    res.status(500).send('Error al guardar los cambios');
+  }
+});
+
+// Página 404 para cualquier ruta que no exista (debe ir después de todas las rutas)
+app.use((req, res) => {
+  res.status(404).render('404', {
+    titulo: 'Página no encontrada — Real Joyería Aguachica',
+    whatsappNumber: WHATSAPP_NUMBER
+  });
 });
 
 // Escuchador del servidor

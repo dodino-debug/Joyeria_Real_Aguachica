@@ -89,6 +89,7 @@
                   <% } %>
                 </td>
                 <td class="p-4 text-center">
+                  <a href="/admin/productos/<%= prod.id %>/editar" class="inline-block text-[11px] font-semibold px-3 py-1 rounded-lg border border-esmeralda/40 text-esmeralda hover:bg-esmeralda/5 transition-all mr-1">Editar</a>
                   <form action="/admin/productos/toggle/<%= prod.id %>" method="POST" class="inline">
                     <button type="submit" class="text-[11px] font-semibold px-3 py-1 rounded-lg border transition-all <%= prod.activo ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-emerald-300 text-emerald-600 hover:bg-emerald-50' %>">
                       <%= prod.activo ? 'Desactivar' : 'Activar' %>
@@ -133,17 +134,17 @@
             <select name="material" required class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
               <option value="oro">Oro 18K</option>
               <option value="plata_925">Plata Ley 925</option>
-              <option value="esmeralda">Esmeralda Natural</option>
             </select>
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block font-bold text-esmeralda mb-1">Público Objetivos</label>
+            <label class="block font-bold text-esmeralda mb-1">Público objetivo</label>
             <select name="para" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
               <option value="mujer">Mujer</option>
               <option value="hombre">Hombre</option>
+              <option value="ninos">Niños</option>
               <option value="pareja">Pareja</option>
               <option value="unisex">Unisex</option>
             </select>
@@ -153,6 +154,35 @@
             <label class="block font-bold text-esmeralda mb-1">Precio (COP) — Opcional</label>
             <input type="number" name="precio" placeholder="Ej: 1250000" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
           </div>
+        </div>
+
+          <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Piedra principal — Opcional</label>
+            <select name="piedra" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+              <option value="">Sin piedra</option>
+              <option value="esmeralda">Esmeralda</option>
+              <option value="rubi">Rubí</option>
+              <option value="zafiro">Zafiro</option>
+              <option value="diamante">Diamante</option>
+              <option value="otra">Otra</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Disponibilidad</label>
+            <select name="disponibilidad" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+              <option value="disponible">Disponible</option>
+              <option value="bajo_pedido">Bajo pedido</option>
+              <option value="agotado">Agotado</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-esmeralda mb-1">Tallas o medidas — Opcional</label>
+          <input type="text" name="talla" maxlength="200" placeholder="Ej: 6, 7, 8, 9  ó  S, M, L" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+          <p class="text-[11px] text-gray-500 mt-1">Sepáralas con comas. Déjalo vacío si el producto no maneja tallas.</p>
         </div>
 
         <div>

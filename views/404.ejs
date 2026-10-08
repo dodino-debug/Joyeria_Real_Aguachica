@@ -1,0 +1,23 @@
+<%- include('partials/header') %>
+
+<main class="bg-slate-50 min-h-[60vh] flex items-center">
+  <div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center space-y-5">
+    <p class="text-dorado-dark text-xs font-bold uppercase tracking-[0.25em]">Error 404</p>
+    <h1 class="text-3xl sm:text-4xl font-serif font-bold text-esmeralda">Esta página no está disponible</h1>
+    <p class="text-sm text-gray-600 leading-relaxed">
+      Es posible que el enlace haya cambiado o que la joya que buscas ya no esté publicada.
+      Puedes explorar el catálogo o escribirnos y te ayudamos a encontrarla.
+    </p>
+    <div class="flex flex-wrap justify-center gap-3 pt-2">
+      <a href="/catalogo" class="bg-esmeralda hover:bg-esmeralda-light text-dorado font-bold px-6 py-3 rounded-full text-xs uppercase tracking-wider transition-colors">
+        Ver catálogo
+      </a>
+      <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('Hola Real Joyería, estoy buscando una joya que no encontré en la página.') %>" target="_blank" class="bg-white border border-dorado/60 text-esmeralda font-medium px-6 py-3 rounded-full text-xs uppercase tracking-wider hover:bg-dorado/10 transition-colors">
+        Preguntar por WhatsApp
+      </a>
+    </div>
+    <a href="/" class="inline-block text-xs text-gray-500 hover:text-esmeralda pt-2">← Volver al inicio</a>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

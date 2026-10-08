@@ -1,4 +1,8 @@
 <%- include('partials/header') %>
+<%
+  const tallas = (producto.talla || '').split(',').map(t => t.trim()).filter(Boolean);
+  const nombresPiedra = { esmeralda: 'Esmeralda', rubi: 'Rubí', zafiro: 'Zafiro', diamante: 'Diamante', otra: 'Otra gema' };
+%>
 
 <main class="bg-slate-50 min-h-screen py-10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -22,11 +26,11 @@
           
           <div class="absolute top-3 left-3 flex flex-col gap-1">
             <% if (producto.material === 'oro') { %>
-              <span class="bg-dorado text-esmeralda-dark text-xs font-bold uppercase px-3 py-1 rounded-full shadow">Oro 18K Guaranteed</span>
+              <span class="bg-dorado text-esmeralda-dark text-xs font-bold uppercase px-3 py-1 rounded-full shadow">Oro 18K Garantizado</span>
             <% } else if (producto.material === 'plata_925') { %>
               <span class="bg-slate-800 text-white text-xs font-bold uppercase px-3 py-1 rounded-full shadow">Plata Ley 925</span>
             <% } else if (producto.material === 'esmeralda') { %>
-              <span class="bg-emerald-800 text-emerald-100 text-xs font-bold uppercase px-3 py-1 rounded-full shadow">Esmeralda Natural Muzo</span>
+              <span class="bg-emerald-800 text-emerald-100 text-xs font-bold uppercase px-3 py-1 rounded-full shadow">Esmeralda</span>
             <% } %>
           </div>
         </div>
@@ -41,27 +45,45 @@
           <!-- PRECIO -->
           <div class="mt-4 pb-4 border-b border-gray-100 flex items-baseline gap-3">
             <% if (producto.precio) { %>
-              <span class="text-2xl font-bold text-esmeralda">$<%= producto.precio.toLocaleString('es-CO') %> COP</span>
-              <span class="text-xs text-gray-500">Impuestos incluidos</span>
+              <span class="text-2xl font-bold text-esmeralda">$<%= Number(producto.precio).toLocaleString('es-CO') %> COP</span>
             <% } else { %>
               <span class="text-lg font-bold text-dorado-dark bg-dorado/10 px-3 py-1 rounded-lg">Precio bajo consulta personalizada</span>
             <% } %>
           </div>
 
+          <!-- DISPONIBILIDAD Y PIEDRA -->
+          <div class="mt-4 flex flex-wrap items-center gap-2">
+            <% if (producto.disponibilidad === 'agotado') { %>
+              <span class="bg-red-100 text-red-800 text-[11px] font-bold px-3 py-1 rounded-full">Agotado</span>
+            <% } else if (producto.disponibilidad === 'bajo_pedido') { %>
+              <span class="bg-amber-100 text-amber-800 text-[11px] font-bold px-3 py-1 rounded-full">Bajo pedido</span>
+            <% } else { %>
+              <span class="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-3 py-1 rounded-full">Disponible</span>
+            <% } %>
+            <% if (producto.piedra) { %>
+              <span class="bg-slate-100 text-slate-700 text-[11px] font-semibold px-3 py-1 rounded-full">Piedra: <%= nombresPiedra[producto.piedra] || producto.piedra %></span>
+            <% } %>
+          </div>
+
+          <!-- DESCRIPCIÓN -->
+          <% if (producto.descripcion) { %>
+            <p class="mt-4 text-sm text-gray-600 leading-relaxed whitespace-pre-line"><%= producto.descripcion %></p>
+          <% } %>
+
           <!-- SELECCIÓN DE TALLA / OPCIONES -->
           <div class="mt-6 space-y-4">
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">Seleccionar Talla / Medida (Opcional)</label>
-              <select id="select-talla" class="w-full text-xs px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-dorado">
-                <option value="Estándar">Talla Estándar</option>
-                <option value="Talla 6 (Anillo)">Talla 6</option>
-                <option value="Talla 7 (Anillo)">Talla 7</option>
-                <option value="Talla 8 (Anillo)">Talla 8</option>
-                <option value="Cadena 45 cm">Cadena 45 cm</option>
-                <option value="Cadena 50 cm">Cadena 50 cm</option>
-                <option value="Medida Personalizada">Medida Personalizada (Ajuste en taller)</option>
-              </select>
-            </div>
+            <% if (tallas.length > 0) { %>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">Seleccionar talla / medida</label>
+                <select id="select-talla" class="w-full text-xs px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-dorado">
+                  <option value="">Elige una opción</option>
+                  <% tallas.forEach(t => { %>
+                    <option value="<%= t %>"><%= t %></option>
+                  <% }) %>
+                  <option value="Otra medida (consultar)">Otra medida (consultar)</option>
+                </select>
+              </div>
+            <% } %>
 
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">Nota o grabado personalizado</label>
@@ -72,13 +94,10 @@
           <!-- DETALLES Y GARANTÍA -->
           <div class="mt-6 pt-4 border-t border-gray-100 space-y-2 text-xs text-gray-600">
             <p class="flex items-center gap-2">
-              <span class="text-emerald-600">✔</span> Certificado de autenticidad sobre metales preciosos y gemas.
-            </p>
-            <p class="flex items-center gap-2">
               <span class="text-emerald-600">✔</span> Financiación directa disponible en Aguachica.
             </p>
             <p class="flex items-center gap-2">
-              <span class="text-emerald-600">✔</span> Envío 100% asegurado a todo Colombia.
+              <span class="text-emerald-600">✔</span> Envío 100% asegurado en Aguachica.
             </p>
           </div>
         </div>
@@ -94,38 +113,74 @@
 
     </div>
 
-    <!-- SECCIÓN DE PRODUCTOS RELACIONADOS -->
-    <section class="mt-16">
-      <h2 class="text-xl font-serif font-bold text-esmeralda mb-6">Otras Piezas que te pueden gustar</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <% relacionados.forEach(rel => { %>
-          <a href="/producto/<%= rel.slug %>" class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden p-4 flex gap-4 hover:border-dorado/50 transition-all">
-            <img src="<%= rel.imagen %>" alt="<%= rel.nombre %>" class="w-20 h-20 object-cover rounded-xl bg-gray-100">
-            <div class="flex flex-col justify-center">
-              <h3 class="font-serif text-xs font-semibold text-gray-900 line-clamp-2"><%= rel.nombre %></h3>
-              <span class="text-xs font-bold text-esmeralda mt-1">
-                <%= rel.precio ? '$' + rel.precio.toLocaleString('es-CO') + ' COP' : 'Consultar' %>
-              </span>
-            </div>
-          </a>
-        <% }) %>
-      </div>
-    </section>
+    <% if (relacionados.length > 0) { %>
+
+      <!-- SECCIÓN DE PRODUCTOS RELACIONADOS -->
+      <section class="mt-16">
+
+        <h2 class="text-xl font-serif font-bold text-esmeralda mb-6">
+          Otras Piezas que te pueden gustar
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+
+          <% relacionados.forEach(rel => { %>
+
+            <a
+              href="/producto/<%= rel.slug %>"
+              class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden p-4 flex gap-4 hover:border-dorado/50 transition-all"
+            >
+
+              <img
+                src="<%= rel.imagen %>"
+                alt="<%= rel.nombre %>"
+                class="w-20 h-20 object-cover rounded-xl bg-gray-100"
+              >
+
+              <div class="flex flex-col justify-center">
+
+                <h3 class="font-serif text-xs font-semibold text-gray-900 line-clamp-2">
+                  <%= rel.nombre %>
+                </h3>
+
+                <span class="text-xs font-bold text-esmeralda mt-1">
+                  <%= rel.precio ? '$' + Number(rel.precio).toLocaleString('es-CO') + ' COP' : 'Consultar' %>
+                </span>
+
+              </div>
+
+            </a>
+
+          <% }) %>
+
+        </div>
+
+      </section>
+
+    <% } %>
 
   </div>
 </main>
 
 <script>
   document.getElementById('btn-comprar-wa').addEventListener('click', () => {
-    const talla = document.getElementById('select-talla').value;
+    const selectTalla = document.getElementById('select-talla');
+    const talla = selectTalla ? selectTalla.value : '';
     const grabado = document.getElementById('input-grabado').value || 'Sin grabado';
-    const nombreProducto = "<%= producto.nombre %>";
+    const nombreProducto = "<%- JSON.stringify(producto.nombre).replace(/</g, '\\u003c') %>";
+    const disponibilidad = "<%- JSON.stringify(producto.disponibilidad || 'disponible') %>";
+
+    const cierres = {
+      disponible: '¿Tienen disponibilidad inmediata?',
+      bajo_pedido: 'Veo que es bajo pedido, ¿cuánto tardaría en estar lista?',
+      agotado: 'Veo que aparece agotada, ¿tendrán nuevas unidades?'
+    };
 
     const mensaje = `Hola Real Joyería Aguachica, estoy interesado en adquirir o consultar la siguiente joya:\n\n` +
                     `💎 Pieza: ${nombreProducto}\n` +
-                    `📐 Medida/Talla: ${talla}\n` +
+                    (talla ? `📐 Medida/Talla: ${talla}\n` : '') +
                     `✏️ Grabado/Detalle: ${grabado}\n\n` +
-                    `¿Tienen disponibilidad inmediata?`;
+                    (cierres[disponibilidad] || cierres.disponible);
 
     const url = `https://wa.me/<%= whatsappNumber %>?text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank');

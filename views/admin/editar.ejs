@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar joya — Real Joyería</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            esmeralda: { DEFAULT: '#053B29', dark: '#022117', light: '#0A5C41' },
+            dorado: { DEFAULT: '#D4AF37', dark: '#AA8A22', light: '#E5C158' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col">
+
+  <header class="bg-esmeralda-dark text-white py-4 border-b border-dorado/30">
+    <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">👑</span>
+        <span class="font-serif font-bold text-dorado uppercase tracking-wider text-sm">Real Joyería · Panel</span>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <span class="text-gray-300">Hola, <strong class="text-dorado"><%= admin.nombre %></strong></span>
+        <a href="/admin/logout" class="bg-red-600/80 hover:bg-red-600 px-3 py-1.5 rounded-lg text-white font-semibold transition-colors">Cerrar Sesión</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-2xl mx-auto px-4 py-8 flex-1 w-full">
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 sm:p-8 space-y-5">
+
+      <div class="flex justify-between items-center border-b pb-3">
+        <h1 class="font-serif font-bold text-lg text-esmeralda">Editar joya</h1>
+        <a href="/admin" class="text-xs text-gray-500 hover:text-esmeralda">← Volver al inventario</a>
+      </div>
+
+      <% if (error) { %>
+        <div class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3"><%= error %></div>
+      <% } %>
+
+      <form action="/admin/productos/<%= producto.id %>/editar" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+
+        <div>
+          <label class="block font-bold text-esmeralda mb-1">Nombre de la Joya</label>
+          <input type="text" name="nombre" required value="<%= producto.nombre %>" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Categoría</label>
+            <select name="categoria_slug" required class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+              <% if (!producto.categoria_slug) { %>
+                <option value="" selected disabled>Elige una categoría</option>
+              <% } %>
+              <% categorias.forEach(cat => { %>
+                <option value="<%= cat.slug %>" <%= producto.categoria_slug === cat.slug ? 'selected' : '' %>><%= cat.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Material</label>
+            <select name="material" required class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+              <option value="oro" <%= producto.material === 'oro' ? 'selected' : '' %>>Oro 18K</option>
+              <option value="plata_925" <%= producto.material === 'plata_925' ? 'selected' : '' %>>Plata Ley 925</option>
+              <% if (!['oro', 'plata_925'].includes(producto.material)) { %>
+                <option value="<%= producto.material %>" selected><%= producto.material %> (valor anterior)</option>
+              <% } %>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Público objetivo</label>
+            <select name="para" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+              <option value="mujer" <%= producto.para === 'mujer' ? 'selected' : '' %>>Mujer</option>
+              <option value="hombre" <%= producto.para === 'hombre' ? 'selected' : '' %>>Hombre</option>
+              <option value="ninos" <%= producto.para === 'ninos' ? 'selected' : '' %>>Niños</option>
+              <option value="pareja" <%= producto.para === 'pareja' ? 'selected' : '' %>>Pareja</option>
+              <option value="unisex" <%= producto.para === 'unisex' ? 'selected' : '' %>>Unisex</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Precio (COP) — Opcional</label>
+            <input type="number" name="precio" min="0" value="<%= producto.precio !== null && producto.precio !== undefined ? Number(producto.precio) : '' %>" placeholder="Ej: 1250000" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Piedra principal — Opcional</label>
+            <select name="piedra" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+              <option value="" <%= !producto.piedra ? 'selected' : '' %>>Sin piedra</option>
+              <option value="esmeralda" <%= producto.piedra === 'esmeralda' ? 'selected' : '' %>>Esmeralda</option>
+              <option value="rubi" <%= producto.piedra === 'rubi' ? 'selected' : '' %>>Rubí</option>
+              <option value="zafiro" <%= producto.piedra === 'zafiro' ? 'selected' : '' %>>Zafiro</option>
+              <option value="diamante" <%= producto.piedra === 'diamante' ? 'selected' : '' %>>Diamante</option>
+              <option value="otra" <%= producto.piedra === 'otra' ? 'selected' : '' %>>Otra</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Disponibilidad</label>
+            <select name="disponibilidad" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+              <option value="disponible" <%= producto.disponibilidad === 'disponible' ? 'selected' : '' %>>Disponible</option>
+              <option value="bajo_pedido" <%= producto.disponibilidad === 'bajo_pedido' ? 'selected' : '' %>>Bajo pedido</option>
+              <option value="agotado" <%= producto.disponibilidad === 'agotado' ? 'selected' : '' %>>Agotado</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-esmeralda mb-1">Tallas o medidas — Opcional</label>
+          <input type="text" name="talla" maxlength="200" value="<%= producto.talla || '' %>" placeholder="Ej: 6, 7, 8, 9  ó  S, M, L" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+          <p class="text-[11px] text-gray-500 mt-1">Sepáralas con comas. Déjalo vacío si el producto no maneja tallas.</p>
+        </div>
+
+        <div>
+          <label class="block font-bold text-esmeralda mb-1">Fotografía</label>
+          <div class="flex items-center gap-4">
+            <img src="<%= producto.imagen %>" alt="Foto actual" class="w-20 h-20 object-cover rounded-lg border">
+            <div class="flex-1">
+              <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp" class="w-full p-2 border rounded-xl bg-gray-50">
+              <p class="text-[11px] text-gray-500 mt-1">Déjalo vacío para conservar la foto actual.</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-esmeralda mb-1">Descripción</label>
+          <textarea name="descripcion" rows="4" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado"><%= producto.descripcion || '' %></textarea>
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" name="destacado" id="destacado" class="rounded" <%= producto.destacado ? 'checked' : '' %>>
+            <label for="destacado" class="font-bold text-gray-700">Mostrar como Pieza Destacada en Inicio</label>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" name="activo" id="activo" class="rounded" <%= producto.activo ? 'checked' : '' %>>
+            <label for="activo" class="font-bold text-gray-700">Visible en la tienda (activo)</label>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <a href="/admin" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl font-bold">Cancelar</a>
+          <button type="submit" class="px-5 py-2 bg-esmeralda hover:bg-esmeralda-light text-dorado font-bold rounded-xl">Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+</body>
+</html>
