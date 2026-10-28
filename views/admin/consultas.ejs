@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consultas — Real Joyería</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            esmeralda: { DEFAULT: '#053B29', dark: '#022117', light: '#0A5C41' },
+            dorado: { DEFAULT: '#D4AF37', dark: '#AA8A22', light: '#E5C158' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col">
+
+  <header class="bg-esmeralda-dark text-white py-4 border-b border-dorado/30">
+    <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">👑</span>
+        <span class="font-serif font-bold text-dorado uppercase tracking-wider text-sm">Real Joyería · Panel</span>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <span class="text-gray-300">Hola, <strong class="text-dorado"><%= admin.nombre %></strong></span>
+        <a href="/admin/logout" class="bg-red-600/80 hover:bg-red-600 px-3 py-1.5 rounded-lg text-white font-semibold transition-colors">Cerrar Sesión</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-8 flex-1 w-full space-y-4">
+
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+      <div>
+        <h1 class="text-2xl font-serif font-bold text-esmeralda">Consultas recibidas</h1>
+        <p class="text-xs text-gray-500 mt-1">Mensajes enviados desde el formulario de contacto</p>
+      </div>
+      <a href="/admin" class="text-xs text-gray-500 hover:text-esmeralda">← Volver al inventario</a>
+    </div>
+
+    <% if (consultas.length === 0) { %>
+      <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center text-xs text-gray-500">Todavía no hay consultas.</div>
+    <% } %>
+
+    <% consultas.forEach(c => {
+         const d = c.telefono.replace(/\D/g, '');
+         const waNum = /^3\d{9}$/.test(d) ? '57' + d : d;
+    %>
+      <div class="bg-white rounded-2xl border <%= c.leida ? 'border-gray-200' : 'border-dorado' %> shadow-sm p-5 space-y-3">
+        <div class="flex flex-wrap justify-between items-start gap-2">
+          <div>
+            <p class="font-bold text-esmeralda text-sm">
+              <%= c.nombre %>
+              <% if (!c.leida) { %><span class="ml-2 bg-dorado/20 text-dorado-dark text-[10px] font-bold px-2 py-0.5 rounded-full">Nueva</span><% } %>
+            </p>
+            <p class="text-xs text-gray-500 mt-0.5">
+              📞 <%= c.telefono %> ·
+              <%= new Date(c.fecha_creacion).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Bogota' }) %>
+            </p>
+          </div>
+        </div>
+
+        <p class="text-sm text-gray-700 whitespace-pre-line"><%= c.mensaje %></p>
+
+        <div class="flex flex-wrap gap-2 pt-1">
+          <a href="https://wa.me/<%= waNum %>?text=<%= encodeURIComponent('Hola ' + c.nombre + ', te escribimos de Real Joyería Aguachica sobre tu consulta.') %>" target="_blank" rel="noopener" class="text-[11px] font-semibold px-3 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+            Responder por WhatsApp
+          </a>
+          <form action="/admin/consultas/<%= c.id %>/leida" method="POST">
+            <button type="submit" class="text-[11px] font-semibold px-3 py-1 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+              <%= c.leida ? 'Marcar como no leída' : 'Marcar como leída' %>
+            </button>
+          </form>
+          <form action="/admin/consultas/<%= c.id %>/eliminar" method="POST" onsubmit="return confirm('¿Eliminar esta consulta? No se puede deshacer.');">
+            <button type="submit" class="text-[11px] font-semibold px-3 py-1 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition-colors">Eliminar</button>
+          </form>
+        </div>
+      </div>
+    <% }) %>
+
+  </main>
+</body>
+</html>

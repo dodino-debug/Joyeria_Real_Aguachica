@@ -33,7 +33,7 @@
 </head>
 <body class="bg-slate-50 text-gray-900 font-sans antialiased">
 
-<% 
+<%
   const menuLinks = [
     { text: 'Inicio', url: '/', icon: '👑' },
     { text: 'Catálogo', url: '/catalogo', icon: '💎' },
@@ -42,8 +42,10 @@
     { text: 'Financiación', url: '/financiacion', icon: '💳' },
     { text: 'Contacto', url: '/contacto', icon: '📍' }
   ];
+  const waHeader = 'https://wa.me/' + (typeof whatsappNumber !== 'undefined' ? whatsappNumber : '') +
+    '?text=' + encodeURIComponent('Hola, estoy visitando la página de Real Joyería Aguachica y quiero recibir información.');
 %>
-  
+
 <!-- Barra superior de anuncios -->
 <div class="bg-esmeralda-dark text-dorado-light text-xs py-2 text-center font-light tracking-widest uppercase px-4 border-b border-dorado/20">
   <span>✨ Financiación directa disponible | Envíos seguros a Aguachica💎</span>
@@ -75,7 +77,7 @@
       <!-- BOTÓN WHATSAPP & BOTÓN MENÚ MÓVIL -->
       <div class="flex items-center gap-3">
         <!-- Botón de WhatsApp -->
-        <a href="https://wa.me/<%= typeof whatsappNumber !== 'undefined' ? whatsappNumber : '' %>?text=<%= encodeURIComponent('Hola, estoy visitando la página de Real Joyería Aguachica y quiero recibir información.') %>" target="_blank" class="hidden sm:inline-flex items-center gap-2 bg-dorado hover:bg-dorado-dark text-esmeralda-dark font-bold text-xs px-4 py-2 rounded-full shadow-md transition-all uppercase tracking-wider">
+        <a href="<%= waHeader %>" target="_blank" rel="noopener" class="hidden sm:inline-flex items-center gap-2 bg-dorado hover:bg-dorado-dark text-esmeralda-dark font-bold text-xs px-4 py-2 rounded-full shadow-md transition-all uppercase tracking-wider">
           <span>Comprar por WhatsApp</span>
         </a>
 
@@ -98,10 +100,10 @@
           <span><%= link.icon %></span> <%= link.text %>
         </a>
       <% }) %>
-      
+
       <!-- Botón WhatsApp dentro del menú desplegable móvil -->
       <div class="pt-2 sm:hidden border-t border-dorado/10">
-        <a href="https://wa.me/<%= typeof whatsappNumber !== 'undefined' ? whatsappNumber : '' %>?text=<%= encodeURIComponent('Hola, estoy visitando la página de Real Joyería Aguachica y quiero recibir información.') %>" target="_blank" class="flex items-center gap-2 py-1">
+        <a href="<%= waHeader %>" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 bg-dorado hover:bg-dorado-dark text-esmeralda-dark font-bold text-xs py-2 rounded-full shadow-md transition-all uppercase tracking-wider w-full">
           <span>Comprar por WhatsApp</span>
         </a>
       </div>

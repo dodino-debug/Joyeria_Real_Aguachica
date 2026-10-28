@@ -44,6 +44,51 @@
       </div>
     </div>
 
+    <!-- FORMULARIO DE CONTACTO -->
+    <div class="mt-10 bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm max-w-2xl mx-auto">
+      <h2 class="font-serif font-bold text-lg text-esmeralda mb-1">Déjanos tu mensaje</h2>
+      <p class="text-xs text-gray-500 mb-5">Te contactaremos por el número que nos dejes.</p>
+
+      <% if (enviado) { %>
+        <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl p-4">
+          ¡Gracias! Recibimos tu mensaje y te contactaremos por el número que dejaste.
+        </div>
+      <% } else { %>
+        <% if (error) { %>
+          <div class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3 mb-4"><%= error %></div>
+        <% } %>
+
+        <form action="/contacto" method="POST" class="space-y-4 text-xs">
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Nombre</label>
+            <input type="text" name="nombre" required maxlength="100" value="<%= valores.nombre %>" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+          </div>
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Teléfono o WhatsApp</label>
+            <input type="tel" name="telefono" required maxlength="30" value="<%= valores.telefono %>" placeholder="Ej: 300 123 4567" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+          </div>
+          <div>
+            <label class="block font-bold text-esmeralda mb-1">Mensaje</label>
+            <textarea name="mensaje" required rows="4" maxlength="1000" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado"><%= valores.mensaje %></textarea>
+          </div>
+
+          <!-- Campo trampa para bots: las personas no lo ven -->
+          <div class="hidden" aria-hidden="true">
+            <label>No llenes este campo <input type="text" name="sitio_web" tabindex="-1" autocomplete="off"></label>
+          </div>
+
+          <label class="flex items-start gap-2 text-gray-600">
+            <input type="checkbox" name="acepta_datos" required class="mt-0.5 rounded">
+            <span>Autorizo a Real Joyería Aguachica a tratar mis datos personales (nombre, teléfono y mensaje) únicamente para responder esta consulta.</span>
+          </label>
+
+          <button type="submit" class="w-full bg-esmeralda hover:bg-esmeralda-light text-dorado font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition-colors">
+            Enviar mensaje
+          </button>
+        </form>
+      <% } %>
+    </div>
+
     <% if (redes.length > 0) { %>
       <div class="mt-8 text-center">
         <p class="text-xs text-gray-600 mb-3">Síguenos en redes sociales</p>

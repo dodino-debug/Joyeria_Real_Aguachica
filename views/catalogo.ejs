@@ -36,12 +36,12 @@
 
           <!-- Filtro por Material -->
           <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">Material / Metal</label>
-              <select name="material" class="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:outline-none focus:border-dorado">
-                <option value="">Todos los materiales</option>
-                <option value="oro" <%= filtrosActivos.material === 'oro' ? 'selected' : '' %>>Oro 18K</option>
-                <option value="plata_925" <%= filtrosActivos.material === 'plata_925' ? 'selected' : '' %>>Plata Ley 925</option>
-              </select>
+            <label class="block text-xs font-bold uppercase tracking-wider text-esmeralda mb-2">Material / Metal</label>
+            <select name="material" class="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-300 bg-white focus:outline-none focus:border-dorado">
+              <option value="">Todos los materiales</option>
+              <option value="oro" <%= filtrosActivos.material === 'oro' ? 'selected' : '' %>>Oro 18K</option>
+              <option value="plata_925" <%= filtrosActivos.material === 'plata_925' ? 'selected' : '' %>>Plata Ley 925</option>
+            </select>
           </div>
 
           <!-- Filtro por Público -->
@@ -112,7 +112,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <% productos.forEach(prod => { %>
               <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden flex flex-col justify-between hover:border-dorado/50 transition-all hover:shadow-md">
-                
+
                 <!-- Imagen con enlace a ficha detallada -->
                 <a href="/producto/<%= prod.slug %>" class="relative aspect-square overflow-hidden bg-gray-100 block">
                   <img src="<%= prod.imagen %>" alt="<%= prod.nombre %>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
@@ -147,7 +147,7 @@
                       <% } %>
                     </div>
 
-                    <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('Hola, me interesa la siguiente pieza del catálogo: ' + prod.nombre) %>" target="_blank" class="bg-esmeralda hover:bg-esmeralda-light text-dorado text-[11px] font-semibold px-3 py-1.5 rounded-full transition-colors">
+                    <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('Hola, me interesa la siguiente pieza del catálogo: ' + prod.nombre) %>" target="_blank" rel="noopener" class="bg-esmeralda hover:bg-esmeralda-light text-dorado text-[11px] font-semibold px-3 py-1.5 rounded-full transition-colors">
                       Consultar
                     </a>
                   </div>

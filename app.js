@@ -1,25 +1,85 @@
+// ==========================================================
+//  Real Joyería Aguachica — servidor principal (app.js)
+// ==========================================================
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const session = require('express-session');
 const multer = require('multer');
-const db = require('./config/db'); // Conexión a PostgreSQL
 const bcrypt = require('bcryptjs');
-const fs = require('fs');
-require('dotenv').config();
+const cloudinary = require('cloudinary').v2;
+const db = require('./config/db'); // Conexión a PostgreSQL
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const WHATSAPP_NUMBER = process.env.WHATSAPP_NUMBER || '573000000000';
+const ES_PRODUCCION = process.env.NODE_ENV === 'production';
 
-// Configuración de almacenamiento de imágenes con Multer
+// Imágenes: con CLOUDINARY_URL se suben a la nube (producción);
+// sin ella se guardan en public/uploads (desarrollo local, como hasta ahora).
+const USAR_CLOUDINARY = Boolean(process.env.CLOUDINARY_URL);
+if (USAR_CLOUDINARY) cloudinary.config({ secure: true }); // lee CLOUDINARY_URL solo
+else if (ES_PRODUCCION) console.warn('⚠️  Falta CLOUDINARY_URL: las imágenes subidas se perderán al reiniciar el servidor.');
+
+// El secreto de sesión es obligatorio: sin él, cualquiera podría falsificar sesiones
+if (!process.env.SESSION_SECRET) {
+  console.error('❌ Falta SESSION_SECRET en el archivo .env. El servidor no se iniciará.');
+  process.exit(1);
+}
+
+// ==========================================================
+//  CONSTANTES Y UTILIDADES
+// ==========================================================
+const PIEDRAS_VALIDAS = ['esmeralda', 'rubi', 'zafiro', 'diamante', 'otra'];
+const DISPONIBILIDADES_VALIDAS = ['disponible', 'agotado', 'bajo_pedido'];
+const PUBLICOS_VALIDOS = ['mujer', 'hombre', 'ninos', 'pareja', 'unisex'];
+const MATERIALES_VALIDOS = ['oro', 'plata_925'];
+
+// Texto limpio y con largo máximo (si no es texto, devuelve '')
+const txt = (v, max = 1000) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+
+// "6, 7,, 8 " -> "6, 7, 8"  (vacío -> null)
+const limpiarTallas = (v) =>
+  txt(v, 400).split(',').map(t => t.trim()).filter(Boolean).join(', ').slice(0, 200) || null;
+
+// Id numérico estricto desde la URL ("12" -> 12; "12abc" o "x" -> null)
+const aId = (v) => (/^\d{1,9}$/.test(String(v)) ? Number(v) : null);
+
+// Borra un archivo local sin romper nada si ya no existe
+const borrarArchivo = (ruta) => { if (ruta) fs.unlink(ruta, () => {}); };
+
+// Descarta una subida recién hecha (si luego falla la validación o el guardado)
+const descartarSubida = (file) => {
+  if (!file) return;
+  if (file.publicId) cloudinary.uploader.destroy(file.publicId).catch(() => {});
+  else borrarArchivo(file.path);
+};
+
+// Borra una imagen vieja a partir de la URL guardada en la base de datos
+const borrarImagenAnterior = (url) => {
+  if (!url) return;
+  if (url.startsWith('/uploads/')) {
+    borrarArchivo(path.join(CARPETA_UPLOADS, path.basename(url)));
+    return;
+  }
+  const m = url.match(/^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/(?:v\d+\/)?(.+)\.[a-z0-9]+$/i);
+  if (m && USAR_CLOUDINARY) cloudinary.uploader.destroy(m[1]).catch(() => {});
+};
+
+// ==========================================================
+//  SUBIDA DE IMÁGENES (Multer)
+// ==========================================================
+const CARPETA_UPLOADS = path.join(__dirname, 'public/uploads');
+if (!USAR_CLOUDINARY) fs.mkdirSync(CARPETA_UPLOADS, { recursive: true });
+
 const EXTENSIONES_PERMITIDAS = ['.jpg', '.jpeg', '.png', '.webp'];
 const MIMES_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
 const TAMANO_MAX_IMAGEN = 8 * 1024 * 1024; // 8 MB
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, 'public/uploads'));
-  },
+const storage = USAR_CLOUDINARY ? multer.memoryStorage() : multer.diskStorage({
+  destination: (req, file, cb) => cb(null, CARPETA_UPLOADS),
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname).toLowerCase();
@@ -39,7 +99,8 @@ const upload = multer({
   }
 });
 
-// Envuelve la subida para responder con un mensaje claro si falla
+// Envuelve la subida para responder con un mensaje claro si falla.
+// Deja en req.file.url la dirección final de la imagen (nube o /uploads/...)
 const subirImagen = (req, res, next) => {
   upload.single('imagen')(req, res, (err) => {
     if (err) {
@@ -48,35 +109,61 @@ const subirImagen = (req, res, next) => {
         : (err.message || 'No se pudo subir la imagen.');
       return res.status(400).send(mensaje);
     }
-    next();
+    if (!req.file) return next();
+
+    if (!USAR_CLOUDINARY) {
+      req.file.url = `/uploads/${req.file.filename}`;
+      return next();
+    }
+
+    const flujo = cloudinary.uploader.upload_stream(
+      {
+        folder: 'real-joyeria',
+        resource_type: 'image',
+        // Reduce el peso sin perder calidad visible (ahorra cuota del plan gratis)
+        transformation: [{ width: 1600, height: 1600, crop: 'limit', quality: 'auto', fetch_format: 'auto' }]
+      },
+      (errorNube, resultado) => {
+        if (errorNube || !resultado) {
+          console.error('Error subiendo a Cloudinary:', errorNube && errorNube.message);
+          return res.status(502).send('No se pudo guardar la imagen. Inténtalo de nuevo.');
+        }
+        req.file.url = resultado.secure_url;
+        req.file.publicId = resultado.public_id;
+        next();
+      }
+    );
+    flujo.end(req.file.buffer);
   });
 };
 
-// Configuración de Vistas
+// ==========================================================
+//  CONFIGURACIÓN DE EXPRESS
+// ==========================================================
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Middlewares
+// Render (y similares) ponen un proxy HTTPS delante: necesario para req.ip y cookies seguras
+if (ES_PRODUCCION) app.set('trust proxy', 1);
+
+// Comprobación de salud para Render (no toca la base de datos)
+app.get('/health', (req, res) => res.status(200).send('ok'));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Configuración de Sesión para el Admin
-if (!process.env.SESSION_SECRET) {
-  console.error('Falta SESSION_SECRET en el archivo .env. El servidor no se iniciará.');
-  process.exit(1);
-}
-
+// Sesión del administrador
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 1000 * 60 * 60 * 24 } // 24 horas
+  cookie: { maxAge: 1000 * 60 * 60 * 24, httpOnly: true, sameSite: 'lax', secure: ES_PRODUCCION } // 24 horas; secure solo con HTTPS
 }));
 
-// ==========================================
-// CONFIGURACIÓN DEL SITIO (editable desde el panel)
-// ==========================================
+// ==========================================================
+//  CONFIGURACIÓN DEL SITIO (editable desde el panel)
+// ==========================================================
 const CONFIG_POR_DEFECTO = {
   whatsapp: WHATSAPP_NUMBER,
   telefono: '',
@@ -101,12 +188,12 @@ async function obtenerConfig() {
     configCacheTiempo = Date.now();
     return cfg;
   } catch (error) {
-    console.error('Error cargando la configuración:', error);
+    console.error('Error cargando la configuración:', error.message);
     return configCache || CONFIG_POR_DEFECTO; // el sitio sigue funcionando
   }
 }
 
-// Disponible en todas las vistas como `config` y `whatsappNumber`
+// Disponible en TODAS las vistas como `config` y `whatsappNumber`
 app.use(async (req, res, next) => {
   const cfg = await obtenerConfig();
   res.locals.config = cfg;
@@ -114,25 +201,64 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// Middleware de Autenticación para proteger las rutas /admin
+// ==========================================================
+//  LÍMITE DE INTENTOS POR IP (en memoria, sin dependencias)
+// ==========================================================
+function limitarIntentos({ max, ventanaMs, mensaje }) {
+  const registro = new Map();
+  setInterval(() => {
+    const ahora = Date.now();
+    for (const [ip, marcas] of registro) {
+      if (!marcas.some(t => ahora - t < ventanaMs)) registro.delete(ip);
+    }
+  }, ventanaMs).unref();
+
+  return (req, res, next) => {
+    const ahora = Date.now();
+    const recientes = (registro.get(req.ip) || []).filter(t => ahora - t < ventanaMs);
+    if (recientes.length >= max) {
+      return res.status(429).send(mensaje || 'Demasiados intentos. Inténtalo más tarde.');
+    }
+    recientes.push(ahora);
+    registro.set(req.ip, recientes);
+    next();
+  };
+}
+
+const limitarContacto = limitarIntentos({
+  max: 8,
+  ventanaMs: 60 * 60 * 1000,
+  mensaje: 'Has enviado demasiados mensajes. Escríbenos por WhatsApp o inténtalo más tarde.'
+});
+
+const limitarLogin = limitarIntentos({
+  max: 10,
+  ventanaMs: 15 * 60 * 1000,
+  mensaje: 'Demasiados intentos de inicio de sesión. Espera 15 minutos.'
+});
+
+// Middleware de autenticación para proteger las rutas /admin
 const requiereAdmin = (req, res, next) => {
-  if (req.session && req.session.admin) {
-    return next();
-  }
+  if (req.session && req.session.admin) return next();
   res.redirect('/admin/login');
 };
 
-// Ruta Inicio
+// ==========================================================
+//  RUTAS PÚBLICAS
+// ==========================================================
+
+// Inicio
 app.get('/', async (req, res) => {
   try {
-    const resProductos = await db.query('SELECT * FROM productos WHERE activo = TRUE AND destacado = TRUE LIMIT 4');
-    const resCategorias = await db.query('SELECT * FROM categorias WHERE en_portada = TRUE ORDER BY orden ASC, id ASC');
+    const [resProductos, resCategorias] = await Promise.all([
+      db.query('SELECT * FROM productos WHERE activo = TRUE AND destacado = TRUE LIMIT 4'),
+      db.query('SELECT * FROM categorias WHERE en_portada = TRUE ORDER BY orden ASC, id ASC')
+    ]);
 
     res.render('index', {
       titulo: 'Real Joyería Aguachica — Joyas que hacen especial cada momento',
       categorias: resCategorias.rows,
-      productos: resProductos.rows,
-      whatsappNumber: res.locals.whatsappNumber
+      productos: resProductos.rows
     });
   } catch (error) {
     console.error('Error cargando la página principal:', error);
@@ -140,42 +266,45 @@ app.get('/', async (req, res) => {
   }
 });
 
-// Ruta Catálogo con Filtros y PostgreSQL
+// Catálogo con filtros
 app.get('/catalogo', async (req, res) => {
   try {
-    const { buscar, categoria, material, publico, piedra } = req.query;
+    const buscar = txt(req.query.buscar, 100);
+    const categoria = txt(req.query.categoria, 100);
+    const material = txt(req.query.material, 50);
+    const publico = txt(req.query.publico, 20);
+    const piedra = txt(req.query.piedra, 20);
 
     let query = 'SELECT * FROM productos WHERE activo = TRUE';
     const params = [];
 
-    // 1. Filtro por término de búsqueda (nombre)
-    if (buscar && buscar.trim() !== '') {
-      params.push(`%${buscar.trim()}%`);
+    // 1. Búsqueda por nombre
+    if (buscar) {
+      params.push(`%${buscar}%`);
       query += ` AND LOWER(nombre) LIKE LOWER($${params.length})`;
     }
 
-    // 2. Filtro por Colección / Categoría
-    if (categoria && categoria.trim() !== '') {
+    // 2. Colección / categoría
+    if (categoria) {
       params.push(categoria);
       query += ` AND categoria_slug = $${params.length}`;
     }
 
-    // 3. Filtro por Material
-    if (material && material.trim() !== '') {
+    // 3. Material (metal)
+    if (material) {
       params.push(material);
       query += ` AND material = $${params.length}`;
     }
 
-    // 4. Filtro por Público (columna 'para' en la BD)
+    // 4. Público (columna 'para'). Unisex y Pareja aparecen en Dama y en Caballero
     if (publico === 'mujer' || publico === 'hombre') {
-      // Unisex y Pareja aparecen tanto en Dama como en Caballero
       params.push(publico);
       query += ` AND para IN ($${params.length}, 'unisex', 'pareja')`;
     } else if (publico === 'ninos') {
       query += ` AND para = 'ninos'`;
     }
 
-    // 5. Filtro por Piedra: con o sin esmeralda
+    // 5. Esmeralda: con o sin (texto fijo, nada del usuario entra en la consulta)
     if (piedra === 'con_esmeralda') {
       query += ` AND piedra = 'esmeralda'`;
     } else if (piedra === 'sin_esmeralda') {
@@ -184,7 +313,6 @@ app.get('/catalogo', async (req, res) => {
 
     query += ' ORDER BY id DESC';
 
-    // Ejecución de consultas en paralelo
     const [resProductos, resCategorias] = await Promise.all([
       db.query(query, params),
       db.query('SELECT * FROM categorias ORDER BY orden ASC, id ASC')
@@ -194,14 +322,7 @@ app.get('/catalogo', async (req, res) => {
       titulo: 'Catálogo de Joyas — Real Joyería Aguachica',
       productos: resProductos.rows,
       categorias: resCategorias.rows,
-      filtrosActivos: {
-        buscar: buscar || '',
-        categoria: categoria || '',
-        material: material || '',
-        publico: publico || '',
-        piedra: piedra || ''
-      },
-      whatsappNumber: res.locals.whatsappNumber
+      filtrosActivos: { buscar, categoria, material, publico, piedra }
     });
   } catch (error) {
     console.error('Error cargando el catálogo:', error);
@@ -209,20 +330,21 @@ app.get('/catalogo', async (req, res) => {
   }
 });
 
-// Ruta Ficha Detallada del Producto
+// Ficha detallada del producto
 app.get('/producto/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
     const resProducto = await db.query('SELECT * FROM productos WHERE slug = $1 AND activo = TRUE', [slug]);
 
     if (resProducto.rows.length === 0) {
-      return res.status(404).render('404', { 
-        titulo: 'Producto no encontrado — Real Joyería Aguachica',
-        whatsappNumber: res.locals.whatsappNumber
+      return res.status(404).render('404', {
+        titulo: 'Producto no encontrado — Real Joyería Aguachica'
       });
     }
 
     const producto = resProducto.rows[0];
+
+    // Relacionados: primero los de la misma categoría, luego se completa con otros
     const resRelacionados = await db.query(
       `SELECT * FROM productos
         WHERE id != $1 AND activo = TRUE
@@ -234,8 +356,7 @@ app.get('/producto/:slug', async (req, res) => {
     res.render('producto_detalle', {
       titulo: `${producto.nombre} — Real Joyería Aguachica`,
       producto,
-      relacionados: resRelacionados.rows,
-      whatsappNumber: res.locals.whatsappNumber
+      relacionados: resRelacionados.rows
     });
   } catch (error) {
     console.error('Error cargando el producto:', error);
@@ -243,51 +364,77 @@ app.get('/producto/:slug', async (req, res) => {
   }
 });
 
-// Ruta Diseños Personalizados
+// Páginas informativas
 app.get('/personaliza', (req, res) => {
-  res.render('personaliza', {
-    titulo: 'Diseños Personalizados — Real Joyería Aguachica',
-    whatsappNumber: res.locals.whatsappNumber
-  });
+  res.render('personaliza', { titulo: 'Diseños Personalizados — Real Joyería Aguachica' });
 });
 
-// Ruta Esmeraldas
 app.get('/esmeraldas', (req, res) => {
-  res.render('esmeraldas', {
-    titulo: 'Esmeraldas Naturales Muzo — Real Joyería Aguachica',
-    whatsappNumber: res.locals.whatsappNumber
-  });
+  res.render('esmeraldas', { titulo: 'Esmeraldas Naturales Muzo — Real Joyería Aguachica' });
 });
 
-// Ruta Financiación
 app.get('/financiacion', (req, res) => {
-  res.render('financiacion', {
-    titulo: 'Planes de Financiación — Real Joyería Aguachica',
-    whatsappNumber: res.locals.whatsappNumber
-  });
+  res.render('financiacion', { titulo: 'Planes de Financiación — Real Joyería Aguachica' });
 });
 
-// Ruta Contacto
-app.get('/contacto', (req, res) => {
-  res.render('contacto', {
+// Contacto (con formulario)
+const renderContacto = (res, extra = {}, status = 200) =>
+  res.status(status).render('contacto', {
     titulo: 'Contacto y Ubicación — Real Joyería Aguachica',
-    whatsappNumber: res.locals.whatsappNumber
+    enviado: false,
+    error: null,
+    valores: { nombre: '', telefono: '', mensaje: '' },
+    ...extra
   });
+
+app.get('/contacto', (req, res) => {
+  renderContacto(res, { enviado: req.query.enviado === '1' });
 });
 
-// ==========================================
-// RUTAS DEL PANEL DE ADMINISTRACIÓN (/admin)
-// ==========================================
+app.post('/contacto', limitarContacto, async (req, res) => {
+  const b = req.body || {};
+  const valores = { nombre: txt(b.nombre, 100), telefono: txt(b.telefono, 30), mensaje: txt(b.mensaje, 1000) };
 
-// Vista Login Admin
+  // Campo trampa para bots: si viene relleno, se finge éxito y no se guarda nada
+  if (typeof b.sitio_web === 'string' && b.sitio_web !== '') {
+    return res.redirect('/contacto?enviado=1');
+  }
+
+  const errores = [];
+  if (valores.nombre.length < 2) errores.push('Escribe tu nombre.');
+  const digitos = valores.telefono.replace(/\D/g, '');
+  if (digitos.length < 7 || digitos.length > 15) errores.push('Escribe un teléfono o WhatsApp válido.');
+  if (valores.mensaje.length < 5) errores.push('Escribe tu mensaje.');
+  if (b.acepta_datos !== 'on') errores.push('Debes autorizar el tratamiento de tus datos para enviar la consulta.');
+
+  if (errores.length > 0) {
+    return renderContacto(res, { error: errores.join(' '), valores }, 400);
+  }
+
+  try {
+    await db.query(
+      'INSERT INTO consultas (nombre, telefono, mensaje, acepta_datos) VALUES ($1, $2, $3, TRUE)',
+      [valores.nombre, valores.telefono, valores.mensaje]
+    );
+    res.redirect('/contacto?enviado=1');
+  } catch (error) {
+    console.error('Error guardando la consulta:', error);
+    renderContacto(res, { error: 'No pudimos guardar tu mensaje. Escríbenos por WhatsApp.', valores }, 500);
+  }
+});
+
+// ==========================================================
+//  PANEL DE ADMINISTRACIÓN (/admin)
+// ==========================================================
+
+// Login
 app.get('/admin/login', (req, res) => {
   if (req.session.admin) return res.redirect('/admin');
   res.render('admin/login', { error: null });
 });
 
-// Procesar Login Admin
-app.post('/admin/login', async (req, res) => {
-  const { usuario, password } = req.body;
+app.post('/admin/login', limitarLogin, async (req, res) => {
+  const { usuario, password } = req.body || {};
   try {
     if (typeof usuario !== 'string' || typeof password !== 'string') {
       return res.render('admin/login', { error: 'Usuario o contraseña incorrectos' });
@@ -302,15 +449,15 @@ app.post('/admin/login', async (req, res) => {
       if (esHash) {
         valida = await bcrypt.compare(password, admin.password_hash);
       } else if (password === admin.password_hash) {
-        // TEMPORAL: migra la contraseña en texto plano a hash en el primer login.
-        // Eliminar esta rama cuando el admin ya haya iniciado sesión una vez.
+        // TEMPORAL: migra una contraseña guardada en texto plano a hash en el primer login.
+        // Cuando la contraseña ya esté cifrada en la BD, esta rama nunca se ejecuta y se puede borrar.
         valida = true;
         const nuevoHash = await bcrypt.hash(password, 12);
         await db.query('UPDATE usuarios_admin SET password_hash = $1 WHERE id = $2', [nuevoHash, admin.id]);
       }
 
       if (valida) {
-        // Solo datos necesarios; nunca guardar el hash en la sesión
+        // Solo los datos necesarios; nunca se guarda el hash en la sesión
         req.session.admin = { id: admin.id, usuario: admin.usuario, nombre: admin.nombre };
         return res.redirect('/admin');
       }
@@ -322,23 +469,24 @@ app.post('/admin/login', async (req, res) => {
   }
 });
 
-// Cerrar Sesión Admin
 app.get('/admin/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/admin/login');
+  req.session.destroy(() => res.redirect('/admin/login'));
 });
 
-// Dashboard Principal Admin (Listar joyas)
+// Dashboard: inventario de joyas
 app.get('/admin', requiereAdmin, async (req, res) => {
   try {
-    const [result, resCategorias] = await Promise.all([
+    const [result, resCategorias, resNuevas] = await Promise.all([
       db.query('SELECT * FROM productos ORDER BY id DESC'),
-      db.query('SELECT * FROM categorias ORDER BY orden ASC, id ASC')
+      db.query('SELECT * FROM categorias ORDER BY orden ASC, id ASC'),
+      db.query('SELECT COUNT(*)::int AS n FROM consultas WHERE leida = FALSE')
+        .catch(() => ({ rows: [{ n: 0 }] })) // si la tabla aún no existe, el panel igual abre
     ]);
     res.render('admin/dashboard', {
       admin: req.session.admin,
       productos: result.rows,
-      categorias: resCategorias.rows
+      categorias: resCategorias.rows,
+      consultasNuevas: resNuevas.rows[0].n
     });
   } catch (error) {
     console.error('Error cargando dashboard:', error);
@@ -346,37 +494,57 @@ app.get('/admin', requiereAdmin, async (req, res) => {
   }
 });
 
-// Procesar Creación de Nueva Joya
+// Crear joya nueva
 app.post('/admin/productos/nuevo', requiereAdmin, subirImagen, async (req, res) => {
   try {
-    const { nombre, categoria_slug, material, para, precio, descripcion, destacado, piedra, talla, disponibilidad } = req.body;
-    const slug = nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now();
-    const imagenUrl = req.file ? `/uploads/${req.file.filename}` : '/image/logo.jpg';
-    const esDestacado = destacado === 'on' || destacado === 'true';
-    const PIEDRAS = ['esmeralda', 'rubi', 'zafiro', 'diamante', 'otra'];
-    const DISPONIBILIDADES = ['disponible', 'agotado', 'bajo_pedido'];
-    const piedraFinal = PIEDRAS.includes(piedra) ? piedra : null;
-    const disponibilidadFinal = DISPONIBILIDADES.includes(disponibilidad) ? disponibilidad : 'disponible';
-    const tallaFinal = (talla || '').split(',').map(t => t.trim()).filter(Boolean).join(', ').slice(0, 200) || null;
+    const b = req.body || {};
+    const nombre = txt(b.nombre, 150);
+    if (!nombre) {
+      descartarSubida(req.file);
+      return res.status(400).send('El nombre de la joya es obligatorio.');
+    }
+
+    const precioTxt = txt(b.precio, 20);
+    const precio = precioTxt === '' ? null : Number(precioTxt);
+    if (precio !== null && (!Number.isFinite(precio) || precio < 0 || precio > 9999999999)) {
+      descartarSubida(req.file);
+      return res.status(400).send('El precio no es válido.');
+    }
+
+    const slug = nombre.toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+      .slice(0, 120) + '-' + Date.now();
+
+    const imagenUrl = req.file ? req.file.url : '/image/logo.jpg';
+    const esDestacado = b.destacado === 'on' || b.destacado === 'true';
+    const piedra = PIEDRAS_VALIDAS.includes(b.piedra) ? b.piedra : null;
+    const disponibilidad = DISPONIBILIDADES_VALIDAS.includes(b.disponibilidad) ? b.disponibilidad : 'disponible';
 
     await db.query(
-      `INSERT INTO productos (nombre, slug, categoria_slug, material, para, precio, imagen, descripcion, destacado, activo, piedra, talla, disponibilidad)
+      `INSERT INTO productos
+         (nombre, slug, categoria_slug, material, para, precio, imagen, descripcion, destacado, activo, piedra, talla, disponibilidad)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10, $11, $12)`,
-      [nombre, slug, categoria_slug, material, para, precio || null, imagenUrl, descripcion, esDestacado, piedraFinal, tallaFinal, disponibilidadFinal]
+      [nombre, slug, txt(b.categoria_slug, 100), txt(b.material, 50), txt(b.para, 50) || 'unisex',
+       precio, imagenUrl, txt(b.descripcion, 2000) || null, esDestacado,
+       piedra, limpiarTallas(b.talla), disponibilidad]
     );
 
     res.redirect('/admin');
   } catch (error) {
     console.error('Error creando producto:', error);
+    descartarSubida(req.file);
     res.status(500).send('Error al guardar el producto');
   }
 });
 
-// Cambiar Estado Activo/Inactivo (Eliminación lógica)
+// Activar / desactivar (eliminación lógica)
 app.post('/admin/productos/toggle/:id', requiereAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
-    await db.query('UPDATE productos SET activo = NOT activo WHERE id = $1', [id]);
+    const id = aId(req.params.id);
+    if (id !== null) {
+      await db.query('UPDATE productos SET activo = NOT activo WHERE id = $1', [id]);
+    }
     res.redirect('/admin');
   } catch (error) {
     console.error('Error cambiando estado:', error);
@@ -384,20 +552,11 @@ app.post('/admin/productos/toggle/:id', requiereAdmin, async (req, res) => {
   }
 });
 
-// ==========================================
-// EDITAR PRODUCTO
-// ==========================================
-const PIEDRAS_VALIDAS = ['esmeralda', 'rubi', 'zafiro', 'diamante', 'otra'];
-const DISPONIBILIDADES_VALIDAS = ['disponible', 'agotado', 'bajo_pedido'];
-const PUBLICOS_VALIDOS = ['mujer', 'hombre', 'ninos', 'pareja', 'unisex'];
-const MATERIALES_VALIDOS = ['oro', 'plata_925'];
-const txt = (v) => (typeof v === 'string' ? v.trim() : '');
-
-// Formulario de edición
+// Editar joya: formulario
 app.get('/admin/productos/:id/editar', requiereAdmin, async (req, res) => {
   try {
-    const id = Number.parseInt(req.params.id, 10);
-    if (!Number.isInteger(id)) return res.redirect('/admin');
+    const id = aId(req.params.id);
+    if (id === null) return res.redirect('/admin');
 
     const [resProducto, resCategorias] = await Promise.all([
       db.query('SELECT * FROM productos WHERE id = $1', [id]),
@@ -417,10 +576,13 @@ app.get('/admin/productos/:id/editar', requiereAdmin, async (req, res) => {
   }
 });
 
-// Guardar cambios
+// Editar joya: guardar cambios
 app.post('/admin/productos/:id/editar', requiereAdmin, subirImagen, async (req, res) => {
-  const id = Number.parseInt(req.params.id, 10);
-  if (!Number.isInteger(id)) return res.redirect('/admin');
+  const id = aId(req.params.id);
+  if (id === null) {
+    descartarSubida(req.file);
+    return res.redirect('/admin');
+  }
 
   try {
     const [resProducto, resCategorias] = await Promise.all([
@@ -428,23 +590,23 @@ app.post('/admin/productos/:id/editar', requiereAdmin, subirImagen, async (req, 
       db.query('SELECT * FROM categorias ORDER BY orden ASC, id ASC')
     ]);
     if (resProducto.rows.length === 0) {
-      if (req.file) fs.unlink(req.file.path, () => {});
+      descartarSubida(req.file);
       return res.redirect('/admin');
     }
     const actual = resProducto.rows[0];
 
-    const b = req.body;
-    const precioTxt = txt(b.precio);
+    const b = req.body || {};
+    const precioTxt = txt(b.precio, 20);
     const datos = {
-      nombre: txt(b.nombre),
-      categoria_slug: txt(b.categoria_slug),
-      material: txt(b.material),
-      para: txt(b.para),
+      nombre: txt(b.nombre, 150),
+      categoria_slug: txt(b.categoria_slug, 100),
+      material: txt(b.material, 50),
+      para: txt(b.para, 50),
       precio: precioTxt === '' ? null : Number(precioTxt),
       piedra: PIEDRAS_VALIDAS.includes(b.piedra) ? b.piedra : null,
-      talla: txt(b.talla).split(',').map(t => t.trim()).filter(Boolean).join(', ').slice(0, 200) || null,
-      disponibilidad: txt(b.disponibilidad),
-      descripcion: txt(b.descripcion) || null,
+      talla: limpiarTallas(b.talla),
+      disponibilidad: txt(b.disponibilidad, 20),
+      descripcion: txt(b.descripcion, 2000) || null,
       destacado: b.destacado === 'on',
       activo: b.activo === 'on'
     };
@@ -460,7 +622,7 @@ app.post('/admin/productos/:id/editar', requiereAdmin, subirImagen, async (req, 
     }
 
     if (errores.length > 0) {
-      if (req.file) fs.unlink(req.file.path, () => {});
+      descartarSubida(req.file);
       return res.status(400).render('admin/editar', {
         admin: req.session.admin,
         producto: { ...actual, ...datos },
@@ -469,7 +631,7 @@ app.post('/admin/productos/:id/editar', requiereAdmin, subirImagen, async (req, 
       });
     }
 
-    const imagenFinal = req.file ? `/uploads/${req.file.filename}` : actual.imagen;
+    const imagenFinal = req.file ? req.file.url : actual.imagen;
 
     await db.query(
       `UPDATE productos
@@ -482,20 +644,18 @@ app.post('/admin/productos/:id/editar', requiereAdmin, subirImagen, async (req, 
        datos.destacado, datos.activo, imagenFinal, id]
     );
 
-    // Si se subió una foto nueva, borra la anterior (solo si estaba en /uploads)
-    if (req.file && actual.imagen && actual.imagen.startsWith('/uploads/')) {
-      fs.unlink(path.join(__dirname, 'public/uploads', path.basename(actual.imagen)), () => {});
-    }
+    // Si se subió una foto nueva, borra la anterior (local o de Cloudinary)
+    if (req.file) borrarImagenAnterior(actual.imagen);
 
     res.redirect('/admin');
   } catch (error) {
     console.error('Error editando producto:', error);
-    if (req.file) fs.unlink(req.file.path, () => {});
+    descartarSubida(req.file);
     res.status(500).send('Error al guardar los cambios');
   }
 });
 
-// Página de configuración del sitio
+// Configuración del sitio: formulario
 app.get('/admin/configuracion', requiereAdmin, async (req, res) => {
   const cfg = await obtenerConfig();
   res.render('admin/configuracion', {
@@ -506,15 +666,14 @@ app.get('/admin/configuracion', requiereAdmin, async (req, res) => {
   });
 });
 
-// Guardar configuración
+// Configuración del sitio: guardar
 app.post('/admin/configuracion', requiereAdmin, async (req, res) => {
   try {
-    const b = req.body;
-    const t = (v, max = 200) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+    const b = req.body || {};
     const errores = [];
 
     // WhatsApp: solo dígitos. Si son 10 y empiezan por 3, se antepone 57 (Colombia)
-    let whatsapp = t(b.whatsapp, 30).replace(/\D/g, '');
+    let whatsapp = txt(b.whatsapp, 30).replace(/\D/g, '');
     if (/^3\d{9}$/.test(whatsapp)) whatsapp = '57' + whatsapp;
     if (!/^\d{10,15}$/.test(whatsapp)) {
       errores.push('El número de WhatsApp no es válido. Ejemplo: 573001234567.');
@@ -533,12 +692,12 @@ app.post('/admin/configuracion', requiereAdmin, async (req, res) => {
 
     const datos = {
       whatsapp,
-      telefono: t(b.telefono, 50),
-      horario: t(b.horario),
-      direccion: t(b.direccion),
-      instagram: validarUrl(t(b.instagram, 300), 'Instagram'),
-      facebook: validarUrl(t(b.facebook, 300), 'Facebook'),
-      tiktok: validarUrl(t(b.tiktok, 300), 'TikTok')
+      telefono: txt(b.telefono, 50),
+      horario: txt(b.horario, 200),
+      direccion: txt(b.direccion, 200),
+      instagram: validarUrl(txt(b.instagram, 300), 'Instagram'),
+      facebook: validarUrl(txt(b.facebook, 300), 'Facebook'),
+      tiktok: validarUrl(txt(b.tiktok, 300), 'TikTok')
     };
 
     if (errores.length > 0) {
@@ -566,15 +725,62 @@ app.post('/admin/configuracion', requiereAdmin, async (req, res) => {
   }
 });
 
-// Página 404 para cualquier ruta que no exista (debe ir después de todas las rutas)
-app.use((req, res) => {
-  res.status(404).render('404', {
-    titulo: 'Página no encontrada — Real Joyería Aguachica',
-    whatsappNumber: res.locals.whatsappNumber
-  });
+// Bandeja de consultas
+app.get('/admin/consultas', requiereAdmin, async (req, res) => {
+  try {
+    const r = await db.query('SELECT * FROM consultas ORDER BY fecha_creacion DESC LIMIT 200');
+    res.render('admin/consultas', { admin: req.session.admin, consultas: r.rows });
+  } catch (error) {
+    console.error('Error cargando consultas:', error);
+    res.status(500).send('Error interno del servidor');
+  }
 });
 
-// Escuchador del servidor
-app.listen(PORT, () => {
-  console.log(`👑 Servidor corriendo en http://localhost:${PORT}`);
+app.post('/admin/consultas/:id/leida', requiereAdmin, async (req, res) => {
+  try {
+    const id = aId(req.params.id);
+    if (id !== null) {
+      await db.query('UPDATE consultas SET leida = NOT leida WHERE id = $1', [id]);
+    }
+    res.redirect('/admin/consultas');
+  } catch (error) {
+    console.error('Error actualizando consulta:', error);
+    res.status(500).send('Error al actualizar');
+  }
+});
+
+app.post('/admin/consultas/:id/eliminar', requiereAdmin, async (req, res) => {
+  try {
+    const id = aId(req.params.id);
+    if (id !== null) {
+      await db.query('DELETE FROM consultas WHERE id = $1', [id]);
+    }
+    res.redirect('/admin/consultas');
+  } catch (error) {
+    console.error('Error eliminando consulta:', error);
+    res.status(500).send('Error al eliminar');
+  }
+});
+
+// ==========================================================
+//  PÁGINA 404 (siempre al final, después de todas las rutas)
+// ==========================================================
+app.use((req, res) => {
+  res.status(404).render('404', { titulo: 'Página no encontrada — Real Joyería Aguachica' });
+});
+
+// Manejador global de errores (último middleware)
+app.use((err, req, res, next) => {
+  console.error('Error no controlado:', err);
+  if (res.headersSent) return next(err);
+  res.status(500).send('Error interno del servidor');
+});
+
+// Escuchador del servidor (0.0.0.0 para que Render pueda alcanzarlo)
+const servidor = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`👑 Servidor escuchando en el puerto ${PORT}`);
+});
+servidor.on('error', (err) => {
+  console.error('❌ No se pudo iniciar el servidor:', err.message);
+  process.exit(1);
 });

@@ -4,6 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+    "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -20,12 +21,15 @@
   "homepage": "https://github.com/dodino-debug/Joyeria_Real_Aguachica#readme",
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.11.0",
     "dotenv": "^18.0.5",
     "ejs": "^6.0.1",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "multer": "^2.4.0",
-    "mysql2": "^3.24.5",
     "pg": "^8.23.1"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

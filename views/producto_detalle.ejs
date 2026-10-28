@@ -23,7 +23,7 @@
       <div class="space-y-4">
         <div class="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 border border-gray-100">
           <img id="main-product-img" src="<%= producto.imagen %>" alt="<%= producto.nombre %>" class="w-full h-full object-cover">
-          
+
           <div class="absolute top-3 left-3 flex flex-col gap-1">
             <% if (producto.material === 'oro') { %>
               <span class="bg-dorado text-esmeralda-dark text-xs font-bold uppercase px-3 py-1 rounded-full shadow">Oro 18K Garantizado</span>
@@ -114,49 +114,23 @@
     </div>
 
     <% if (relacionados.length > 0) { %>
-
-      <!-- SECCIÓN DE PRODUCTOS RELACIONADOS -->
-      <section class="mt-16">
-
-        <h2 class="text-xl font-serif font-bold text-esmeralda mb-6">
-          Otras Piezas que te pueden gustar
-        </h2>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-
-          <% relacionados.forEach(rel => { %>
-
-            <a
-              href="/producto/<%= rel.slug %>"
-              class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden p-4 flex gap-4 hover:border-dorado/50 transition-all"
-            >
-
-              <img
-                src="<%= rel.imagen %>"
-                alt="<%= rel.nombre %>"
-                class="w-20 h-20 object-cover rounded-xl bg-gray-100"
-              >
-
-              <div class="flex flex-col justify-center">
-
-                <h3 class="font-serif text-xs font-semibold text-gray-900 line-clamp-2">
-                  <%= rel.nombre %>
-                </h3>
-
-                <span class="text-xs font-bold text-esmeralda mt-1">
-                  <%= rel.precio ? '$' + Number(rel.precio).toLocaleString('es-CO') + ' COP' : 'Consultar' %>
-                </span>
-
-              </div>
-
-            </a>
-
-          <% }) %>
-
-        </div>
-
-      </section>
-
+    <!-- SECCIÓN DE PRODUCTOS RELACIONADOS -->
+    <section class="mt-16">
+      <h2 class="text-xl font-serif font-bold text-esmeralda mb-6">Otras Piezas que te pueden gustar</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <% relacionados.forEach(rel => { %>
+          <a href="/producto/<%= rel.slug %>" class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden p-4 flex gap-4 hover:border-dorado/50 transition-all">
+            <img src="<%= rel.imagen %>" alt="<%= rel.nombre %>" class="w-20 h-20 object-cover rounded-xl bg-gray-100">
+            <div class="flex flex-col justify-center">
+              <h3 class="font-serif text-xs font-semibold text-gray-900 line-clamp-2"><%= rel.nombre %></h3>
+              <span class="text-xs font-bold text-esmeralda mt-1">
+                <%= rel.precio ? '$' + Number(rel.precio).toLocaleString('es-CO') + ' COP' : 'Consultar' %>
+              </span>
+            </div>
+          </a>
+        <% }) %>
+      </div>
+    </section>
     <% } %>
 
   </div>
@@ -167,8 +141,8 @@
     const selectTalla = document.getElementById('select-talla');
     const talla = selectTalla ? selectTalla.value : '';
     const grabado = document.getElementById('input-grabado').value || 'Sin grabado';
-    const nombreProducto = "<%- JSON.stringify(producto.nombre).replace(/</g, '\\u003c') %>";
-    const disponibilidad = "<%- JSON.stringify(producto.disponibilidad || 'disponible') %>";
+    const nombreProducto = <%- JSON.stringify(producto.nombre).replace(/</g, '\\u003c') %>;
+    const disponibilidad = <%- JSON.stringify(producto.disponibilidad || 'disponible') %>;
 
     const cierres = {
       disponible: '¿Tienen disponibilidad inmediata?',
