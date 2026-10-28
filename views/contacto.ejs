@@ -1,4 +1,11 @@
 <%- include('partials/header') %>
+<%
+  const cfg = typeof config !== 'undefined' ? config : {};
+  const wa = String(cfg.whatsapp || (typeof whatsappNumber !== 'undefined' ? whatsappNumber : ''));
+  const direccion = cfg.direccion || 'Aguachica, Cesar, Colombia';
+  const horario = cfg.horario || 'Lunes a Sábado: 8:00 AM - 6:30 PM';
+  const redes = [['Instagram', cfg.instagram], ['Facebook', cfg.facebook], ['TikTok', cfg.tiktok]].filter(r => r[1]);
+%>
 
 <main class="bg-slate-300 min-h-screen py-10">
   <div class="max-w-5xl mx-auto px-4">
@@ -12,15 +19,20 @@
       <div class="bg-white p-6 rounded-2xl border border-gray-200 text-center shadow-sm">
         <span class="text-3xl block mb-2">📍</span>
         <h3 class="font-serif font-bold text-sm text-esmeralda mb-1">Ubicación Física</h3>
-        <p class="text-xs text-gray-600">Aguachica, Cesar — Colombia</p>
-        <p class="text-[11px] text-gray-400 mt-1">Atención presencial bajo cita o libre ingreso</p>
+        <p class="text-xs text-gray-600"><%= direccion %></p>
+        <a href="https://www.google.com/maps/search/?api=1&amp;query=<%= encodeURIComponent(direccion) %>" target="_blank" rel="noopener" class="inline-block mt-3 text-xs font-bold text-esmeralda hover:underline">
+          Ver en Google Maps
+        </a>
       </div>
 
       <div class="bg-white p-6 rounded-2xl border border-gray-200 text-center shadow-sm">
         <span class="text-3xl block mb-2">💬</span>
         <h3 class="font-serif font-bold text-sm text-esmeralda mb-1">WhatsApp Directo</h3>
-        <p class="text-xs text-gray-600">Respuesta rápida e inmediata</p>
-        <a href="https://wa.me/<%= whatsappNumber %>" target="_blank" class="inline-block mt-3 text-xs font-bold text-emerald-600 hover:underline">
+        <p class="text-xs text-gray-600">Escríbenos y te asesoramos</p>
+        <% if (cfg.telefono) { %>
+          <p class="text-[11px] text-gray-400 mt-1">Teléfono: <%= cfg.telefono %></p>
+        <% } %>
+        <a href="https://wa.me/<%= wa %>?text=<%= encodeURIComponent('Hola, quiero recibir información de Real Joyería Aguachica.') %>" target="_blank" rel="noopener" class="inline-block mt-3 text-xs font-bold text-emerald-600 hover:underline">
           Abrir chat de WhatsApp
         </a>
       </div>
@@ -28,10 +40,20 @@
       <div class="bg-white p-6 rounded-2xl border border-gray-200 text-center shadow-sm">
         <span class="text-3xl block mb-2">🕒</span>
         <h3 class="font-serif font-bold text-sm text-esmeralda mb-1">Horarios de Atención</h3>
-        <p class="text-xs text-gray-600">Lunes a Sábado: 8:00 AM - 6:30 PM</p>
-        <p class="text-[11px] text-gray-400 mt-1">Domingos y festivos bajo previa cita</p>
+        <p class="text-xs text-gray-600"><%= horario %></p>
       </div>
     </div>
+
+    <% if (redes.length > 0) { %>
+      <div class="mt-8 text-center">
+        <p class="text-xs text-gray-600 mb-3">Síguenos en redes sociales</p>
+        <div class="flex flex-wrap justify-center gap-3">
+          <% redes.forEach(([nombre, url]) => { %>
+            <a href="<%= url %>" target="_blank" rel="noopener" class="bg-white border border-dorado/50 text-esmeralda text-xs font-semibold px-5 py-2 rounded-full hover:bg-dorado/10 transition-colors"><%= nombre %></a>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
   </div>
 </main>
 

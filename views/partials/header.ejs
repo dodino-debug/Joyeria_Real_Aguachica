@@ -75,7 +75,7 @@
       <!-- BOTÓN WHATSAPP & BOTÓN MENÚ MÓVIL -->
       <div class="flex items-center gap-3">
         <!-- Botón de WhatsApp -->
-        <a href="https://wa.me/<%= typeof whatsappNumber !== 'undefined' ? whatsappNumber : '' %>" target="_blank" class="hidden sm:inline-flex items-center gap-2 bg-dorado hover:bg-dorado-dark text-esmeralda-dark font-bold text-xs px-4 py-2 rounded-full shadow-md transition-all uppercase tracking-wider">
+        <a href="https://wa.me/<%= typeof whatsappNumber !== 'undefined' ? whatsappNumber : '' %>?text=<%= encodeURIComponent('Hola, estoy visitando la página de Real Joyería Aguachica y quiero recibir información.') %>" target="_blank" class="hidden sm:inline-flex items-center gap-2 bg-dorado hover:bg-dorado-dark text-esmeralda-dark font-bold text-xs px-4 py-2 rounded-full shadow-md transition-all uppercase tracking-wider">
           <span>Comprar por WhatsApp</span>
         </a>
 
@@ -101,7 +101,7 @@
       
       <!-- Botón WhatsApp dentro del menú desplegable móvil -->
       <div class="pt-2 sm:hidden border-t border-dorado/10">
-        <a href="https://wa.me/<%= typeof whatsappNumber !== 'undefined' ? whatsappNumber : '' %>" target="_blank" class="flex items-center justify-center gap-2 bg-dorado hover:bg-dorado-dark text-esmeralda-dark font-bold text-xs py-2 rounded-full shadow-md transition-all uppercase tracking-wider w-full">
+        <a href="https://wa.me/<%= typeof whatsappNumber !== 'undefined' ? whatsappNumber : '' %>?text=<%= encodeURIComponent('Hola, estoy visitando la página de Real Joyería Aguachica y quiero recibir información.') %>" target="_blank" class="flex items-center gap-2 py-1">
           <span>Comprar por WhatsApp</span>
         </a>
       </div>
@@ -114,6 +114,3 @@
     document.getElementById('mobile-menu')?.classList.toggle('hidden');
   });
 </script>
-
-</body>
-</html>

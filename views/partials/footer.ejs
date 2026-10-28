@@ -1,35 +1,59 @@
+<%
+  const cfg = typeof config !== 'undefined' ? config : {};
+  const wa = String(cfg.whatsapp || (typeof whatsappNumber !== 'undefined' ? whatsappNumber : ''));
+  const waTexto = (wa.startsWith('57') && wa.length === 12)
+    ? `+57 ${wa.slice(2, 5)} ${wa.slice(5, 8)} ${wa.slice(8)}`
+    : (wa ? '+' + wa : '');
+  const redes = [['Instagram', cfg.instagram], ['Facebook', cfg.facebook], ['TikTok', cfg.tiktok]].filter(r => r[1]);
+%>
 <footer class="bg-neutral-900 text-gray-400 text-xs border-t border-neutral-800 pt-10 pb-6">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-    
+
     <div>
       <span class="block text-lg font-serif font-bold text-white tracking-wider uppercase mb-2">REAL JOYERÍA</span>
       <p class="text-xs text-gray-400">
         Joyería fina en Aguachica, Cesar. Expertos en oro de 18K, plata Ley 925, esmeraldas naturales y joyas personalizadas.
       </p>
+      <% if (redes.length > 0) { %>
+        <div class="flex gap-4 mt-3 text-xs">
+          <% redes.forEach(([nombre, url]) => { %>
+            <a href="<%= url %>" target="_blank" rel="noopener" class="hover:text-dorado transition-colors"><%= nombre %></a>
+          <% }) %>
+        </div>
+      <% } %>
     </div>
 
     <div>
       <h4 class="text-white font-semibold text-xs uppercase tracking-wider mb-3">Atención al cliente</h4>
       <ul class="space-y-1.5 text-xs">
-        <li>📍 Aguachica, Cesar, Colombia</li>
-        <li>📲 WhatsApp: +57 300 000 0000</li>
-        <li>🕒 Lunes a Sábado: 8:00 AM - 6:30 PM</li>
+        <li>📍 <%= cfg.direccion || 'Aguachica, Cesar, Colombia' %></li>
+        <li>📲 WhatsApp: <%= waTexto %></li>
+        <% if (cfg.telefono) { %><li>📞 Teléfono: <%= cfg.telefono %></li><% } %>
+        <li>🕒 <%= cfg.horario || 'Lunes a Sábado: 8:00 AM - 6:30 PM' %></li>
       </ul>
     </div>
 
     <div>
       <h4 class="text-white font-semibold text-xs uppercase tracking-wider mb-3">Garantía y Legales</h4>
       <p class="text-xs text-gray-400 leading-relaxed">
-        Cumplimos con la normativa colombiana de protección de datos personales y garantías sobre metales preciosos.
+        Consúltanos por WhatsApp sobre garantías y tratamiento de datos personales.
       </p>
     </div>
 
   </div>
-
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-neutral-800 pt-4 text-center text-[11px] text-gray-500">
-    <p>&copy; <%= new Date().getFullYear() %> Real Joyería Aguachica. Todos los derechos reservados.</p>
-  </div>
+    <p>&copy; <%= new Date().getFullYear() %> Real Joyería Aguachica. Todos los derechos reservados.
+      <span class="mx-1">·</span>
+      <a href="/admin" class="text-gray-600 hover:text-gray-400">Administración</a>
+    </p>
 </footer>
+
+<!-- Botón flotante de WhatsApp -->
+<a href="https://wa.me/<%= wa %>?text=<%= encodeURIComponent('Hola, estoy visitando la página de Real Joyería Aguachica y quiero recibir información.') %>"
+   target="_blank" rel="noopener" aria-label="Escribir por WhatsApp"
+   class="fixed bottom-5 right-5 z-50 flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5A] text-white font-bold text-xs px-4 py-3 rounded-full shadow-lg transition-colors">
+  <span class="text-base">💬</span>
+  <span class="hidden sm:inline">WhatsApp</span>
+</a>
 
 </body>
 </html>

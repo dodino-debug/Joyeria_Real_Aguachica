@@ -74,6 +74,46 @@ app.use(session({
   cookie: { maxAge: 1000 * 60 * 60 * 24 } // 24 horas
 }));
 
+// ==========================================
+// CONFIGURACIÓN DEL SITIO (editable desde el panel)
+// ==========================================
+const CONFIG_POR_DEFECTO = {
+  whatsapp: WHATSAPP_NUMBER,
+  telefono: '',
+  horario: 'Lunes a Sábado: 8:00 AM - 6:30 PM',
+  direccion: 'Aguachica, Cesar, Colombia',
+  instagram: '',
+  facebook: '',
+  tiktok: ''
+};
+let configCache = null;
+let configCacheTiempo = 0;
+
+async function obtenerConfig() {
+  if (configCache && Date.now() - configCacheTiempo < 60 * 1000) return configCache;
+  try {
+    const r = await db.query('SELECT clave, valor FROM configuracion');
+    const cfg = { ...CONFIG_POR_DEFECTO };
+    r.rows.forEach(({ clave, valor }) => {
+      if (clave in cfg && valor !== '') cfg[clave] = valor;
+    });
+    configCache = cfg;
+    configCacheTiempo = Date.now();
+    return cfg;
+  } catch (error) {
+    console.error('Error cargando la configuración:', error);
+    return configCache || CONFIG_POR_DEFECTO; // el sitio sigue funcionando
+  }
+}
+
+// Disponible en todas las vistas como `config` y `whatsappNumber`
+app.use(async (req, res, next) => {
+  const cfg = await obtenerConfig();
+  res.locals.config = cfg;
+  res.locals.whatsappNumber = cfg.whatsapp;
+  next();
+});
+
 // Middleware de Autenticación para proteger las rutas /admin
 const requiereAdmin = (req, res, next) => {
   if (req.session && req.session.admin) {
@@ -92,7 +132,7 @@ app.get('/', async (req, res) => {
       titulo: 'Real Joyería Aguachica — Joyas que hacen especial cada momento',
       categorias: resCategorias.rows,
       productos: resProductos.rows,
-      whatsappNumber: WHATSAPP_NUMBER
+      whatsappNumber: res.locals.whatsappNumber
     });
   } catch (error) {
     console.error('Error cargando la página principal:', error);
@@ -161,7 +201,7 @@ app.get('/catalogo', async (req, res) => {
         publico: publico || '',
         piedra: piedra || ''
       },
-      whatsappNumber: WHATSAPP_NUMBER
+      whatsappNumber: res.locals.whatsappNumber
     });
   } catch (error) {
     console.error('Error cargando el catálogo:', error);
@@ -178,7 +218,7 @@ app.get('/producto/:slug', async (req, res) => {
     if (resProducto.rows.length === 0) {
       return res.status(404).render('404', { 
         titulo: 'Producto no encontrado — Real Joyería Aguachica',
-        whatsappNumber: WHATSAPP_NUMBER
+        whatsappNumber: res.locals.whatsappNumber
       });
     }
 
@@ -195,7 +235,7 @@ app.get('/producto/:slug', async (req, res) => {
       titulo: `${producto.nombre} — Real Joyería Aguachica`,
       producto,
       relacionados: resRelacionados.rows,
-      whatsappNumber: WHATSAPP_NUMBER
+      whatsappNumber: res.locals.whatsappNumber
     });
   } catch (error) {
     console.error('Error cargando el producto:', error);
@@ -207,7 +247,7 @@ app.get('/producto/:slug', async (req, res) => {
 app.get('/personaliza', (req, res) => {
   res.render('personaliza', {
     titulo: 'Diseños Personalizados — Real Joyería Aguachica',
-    whatsappNumber: WHATSAPP_NUMBER
+    whatsappNumber: res.locals.whatsappNumber
   });
 });
 
@@ -215,7 +255,7 @@ app.get('/personaliza', (req, res) => {
 app.get('/esmeraldas', (req, res) => {
   res.render('esmeraldas', {
     titulo: 'Esmeraldas Naturales Muzo — Real Joyería Aguachica',
-    whatsappNumber: WHATSAPP_NUMBER
+    whatsappNumber: res.locals.whatsappNumber
   });
 });
 
@@ -223,7 +263,7 @@ app.get('/esmeraldas', (req, res) => {
 app.get('/financiacion', (req, res) => {
   res.render('financiacion', {
     titulo: 'Planes de Financiación — Real Joyería Aguachica',
-    whatsappNumber: WHATSAPP_NUMBER
+    whatsappNumber: res.locals.whatsappNumber
   });
 });
 
@@ -231,7 +271,7 @@ app.get('/financiacion', (req, res) => {
 app.get('/contacto', (req, res) => {
   res.render('contacto', {
     titulo: 'Contacto y Ubicación — Real Joyería Aguachica',
-    whatsappNumber: WHATSAPP_NUMBER
+    whatsappNumber: res.locals.whatsappNumber
   });
 });
 
@@ -455,11 +495,82 @@ app.post('/admin/productos/:id/editar', requiereAdmin, subirImagen, async (req, 
   }
 });
 
+// Página de configuración del sitio
+app.get('/admin/configuracion', requiereAdmin, async (req, res) => {
+  const cfg = await obtenerConfig();
+  res.render('admin/configuracion', {
+    admin: req.session.admin,
+    cfg,
+    error: null,
+    ok: req.query.ok === '1'
+  });
+});
+
+// Guardar configuración
+app.post('/admin/configuracion', requiereAdmin, async (req, res) => {
+  try {
+    const b = req.body;
+    const t = (v, max = 200) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+    const errores = [];
+
+    // WhatsApp: solo dígitos. Si son 10 y empiezan por 3, se antepone 57 (Colombia)
+    let whatsapp = t(b.whatsapp, 30).replace(/\D/g, '');
+    if (/^3\d{9}$/.test(whatsapp)) whatsapp = '57' + whatsapp;
+    if (!/^\d{10,15}$/.test(whatsapp)) {
+      errores.push('El número de WhatsApp no es válido. Ejemplo: 573001234567.');
+    }
+
+    // Enlaces de redes: solo http(s), para evitar enlaces peligrosos
+    const validarUrl = (valor, nombre) => {
+      if (valor === '') return '';
+      try {
+        const u = new URL(valor);
+        if (u.protocol === 'https:' || u.protocol === 'http:') return u.href;
+      } catch (e) { /* cae al error de abajo */ }
+      errores.push(`El enlace de ${nombre} debe comenzar con https://`);
+      return valor;
+    };
+
+    const datos = {
+      whatsapp,
+      telefono: t(b.telefono, 50),
+      horario: t(b.horario),
+      direccion: t(b.direccion),
+      instagram: validarUrl(t(b.instagram, 300), 'Instagram'),
+      facebook: validarUrl(t(b.facebook, 300), 'Facebook'),
+      tiktok: validarUrl(t(b.tiktok, 300), 'TikTok')
+    };
+
+    if (errores.length > 0) {
+      return res.status(400).render('admin/configuracion', {
+        admin: req.session.admin,
+        cfg: datos,
+        error: errores.join(' '),
+        ok: false
+      });
+    }
+
+    const filas = Object.entries(datos);
+    await db.query(
+      `INSERT INTO configuracion (clave, valor)
+       SELECT * FROM unnest($1::text[], $2::text[])
+       ON CONFLICT (clave) DO UPDATE SET valor = EXCLUDED.valor`,
+      [filas.map(f => f[0]), filas.map(f => f[1])]
+    );
+
+    configCache = null; // fuerza a recargar la configuración
+    res.redirect('/admin/configuracion?ok=1');
+  } catch (error) {
+    console.error('Error guardando la configuración:', error);
+    res.status(500).send('Error al guardar la configuración');
+  }
+});
+
 // Página 404 para cualquier ruta que no exista (debe ir después de todas las rutas)
 app.use((req, res) => {
   res.status(404).render('404', {
     titulo: 'Página no encontrada — Real Joyería Aguachica',
-    whatsappNumber: WHATSAPP_NUMBER
+    whatsappNumber: res.locals.whatsappNumber
   });
 });
 

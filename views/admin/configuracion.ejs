@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuración — Real Joyería</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            esmeralda: { DEFAULT: '#053B29', dark: '#022117', light: '#0A5C41' },
+            dorado: { DEFAULT: '#D4AF37', dark: '#AA8A22', light: '#E5C158' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col">
+
+  <header class="bg-esmeralda-dark text-white py-4 border-b border-dorado/30">
+    <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">👑</span>
+        <span class="font-serif font-bold text-dorado uppercase tracking-wider text-sm">Real Joyería · Panel</span>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <span class="text-gray-300">Hola, <strong class="text-dorado"><%= admin.nombre %></strong></span>
+        <a href="/admin/logout" class="bg-red-600/80 hover:bg-red-600 px-3 py-1.5 rounded-lg text-white font-semibold transition-colors">Cerrar Sesión</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-2xl mx-auto px-4 py-8 flex-1 w-full">
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 sm:p-8 space-y-5">
+
+      <div class="flex justify-between items-center border-b pb-3">
+        <h1 class="font-serif font-bold text-lg text-esmeralda">Configuración del sitio</h1>
+        <a href="/admin" class="text-xs text-gray-500 hover:text-esmeralda">← Volver al inventario</a>
+      </div>
+
+      <% if (ok) { %>
+        <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl p-3">Cambios guardados. Ya se ven en la página pública.</div>
+      <% } %>
+      <% if (error) { %>
+        <div class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3"><%= error %></div>
+      <% } %>
+
+      <form action="/admin/configuracion" method="POST" class="space-y-4 text-xs">
+
+        <div>
+          <label class="block font-bold text-esmeralda mb-1">WhatsApp de la tienda</label>
+          <input type="text" name="whatsapp" required value="<%= cfg.whatsapp %>" placeholder="Ej: 573001234567" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+          <p class="text-[11px] text-gray-500 mt-1">Con indicativo del país, sin espacios ni signos. Es el número al que llegan todos los mensajes de los botones de la página.</p>
+        </div>
+
+        <div>
+          <label class="block font-bold text-esmeralda mb-1">Teléfono — Opcional</label>
+          <input type="text" name="telefono" maxlength="50" value="<%= cfg.telefono %>" placeholder="Ej: 607 000 0000" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+        </div>
+
+        <div>
+          <label class="block font-bold text-esmeralda mb-1">Horario de atención</label>
+          <input type="text" name="horario" maxlength="200" value="<%= cfg.horario %>" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+        </div>
+
+        <div>
+          <label class="block font-bold text-esmeralda mb-1">Dirección</label>
+          <input type="text" name="direccion" maxlength="200" value="<%= cfg.direccion %>" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+        </div>
+
+        <div class="border-t pt-4 space-y-4">
+          <p class="font-bold text-esmeralda">Redes sociales <span class="font-normal text-gray-500">(deja vacío las que no uses)</span></p>
+          <div>
+            <label class="block text-gray-600 mb-1">Instagram</label>
+            <input type="text" name="instagram" maxlength="300" value="<%= cfg.instagram %>" placeholder="https://www.instagram.com/tu_usuario" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+          </div>
+          <div>
+            <label class="block text-gray-600 mb-1">Facebook</label>
+            <input type="text" name="facebook" maxlength="300" value="<%= cfg.facebook %>" placeholder="https://www.facebook.com/tu_pagina" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+          </div>
+          <div>
+            <label class="block text-gray-600 mb-1">TikTok</label>
+            <input type="text" name="tiktok" maxlength="300" value="<%= cfg.tiktok %>" placeholder="https://www.tiktok.com/@tu_usuario" class="w-full p-2.5 border rounded-xl focus:outline-none focus:border-dorado">
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <a href="/admin" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl font-bold">Cancelar</a>
+          <button type="submit" class="px-5 py-2 bg-esmeralda hover:bg-esmeralda-light text-dorado font-bold rounded-xl">Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+</body>
+</html>
