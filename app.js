@@ -20,7 +20,10 @@ const ES_PRODUCCION = process.env.NODE_ENV === 'production';
 // Imágenes: con CLOUDINARY_URL se suben a la nube (producción);
 // sin ella se guardan en public/uploads (desarrollo local, como hasta ahora).
 const USAR_CLOUDINARY = Boolean(process.env.CLOUDINARY_URL);
-if (USAR_CLOUDINARY) cloudinary.config({ secure: true }); // lee CLOUDINARY_URL solo
+if (USAR_CLOUDINARY) {
+  cloudinary.config({ secure: true }); // lee CLOUDINARY_URL solo
+  console.log(`☁️  Cloudinary activo (cloud: ${cloudinary.config().cloud_name || 'SIN NOMBRE'})`);
+}
 else if (ES_PRODUCCION) console.warn('⚠️  Falta CLOUDINARY_URL: las imágenes subidas se perderán al reiniciar el servidor.');
 
 // El secreto de sesión es obligatorio: sin él, cualquiera podría falsificar sesiones
@@ -759,6 +762,22 @@ app.post('/admin/consultas/:id/eliminar', requiereAdmin, async (req, res) => {
   } catch (error) {
     console.error('Error eliminando consulta:', error);
     res.status(500).send('Error al eliminar');
+  }
+});
+
+// Diagnóstico de Cloudinary (solo administradores; no muestra secretos)
+app.get('/admin/diagnostico-cloudinary', requiereAdmin, async (req, res) => {
+  res.type('text/plain');
+  if (!USAR_CLOUDINARY) {
+    return res.send('Cloudinary NO está activo: el servidor no ve la variable CLOUDINARY_URL.');
+  }
+  const cfg = cloudinary.config();
+  const resumen = `cloud_name: ${cfg.cloud_name || '(vacío)'}\napi_key: ${cfg.api_key ? 'presente (' + String(cfg.api_key).length + ' caracteres)' : '(vacío)'}\napi_secret: ${cfg.api_secret ? 'presente (' + String(cfg.api_secret).length + ' caracteres)' : '(vacío)'}`;
+  try {
+    const r = await cloudinary.api.ping();
+    res.send(`Cloudinary OK (${r.status}).\n${resumen}`);
+  } catch (e) {
+    res.status(500).send(`Cloudinary ERROR ${(e.error && e.error.http_code) || e.http_code || ''}: ${(e.error && e.error.message) || e.message || e}\n${resumen}`);
   }
 });
 
