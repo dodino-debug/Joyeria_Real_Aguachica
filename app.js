@@ -121,11 +121,11 @@ const subirImagen = (req, res, next) => {
         folder: 'real-joyeria',
         resource_type: 'image',
         // Reduce el peso sin perder calidad visible (ahorra cuota del plan gratis)
-        transformation: [{ width: 1600, height: 1600, crop: 'limit', quality: 'auto', fetch_format: 'auto' }]
+        transformation: [{ width: 1600, height: 1600, crop: 'limit', quality: 'auto' }]
       },
       (errorNube, resultado) => {
         if (errorNube || !resultado) {
-          console.error('Error subiendo a Cloudinary:', errorNube && errorNube.message);
+          console.error('Error subiendo a Cloudinary:', (errorNube && (errorNube.http_code + ' - ' + errorNube.message)) || 'sin respuesta');
           return res.status(502).send('No se pudo guardar la imagen. Inténtalo de nuevo.');
         }
         req.file.url = resultado.secure_url;
