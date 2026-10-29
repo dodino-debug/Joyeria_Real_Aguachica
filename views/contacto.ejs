@@ -17,7 +17,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div class="bg-white p-6 rounded-2xl border border-gray-200 text-center shadow-sm">
-        <span class="text-3xl block mb-2">📍</span>
+        <span class="flex items-center justify-center w-12 h-12 mx-auto mb-3 rounded-full bg-esmeralda text-dorado"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
         <h3 class="font-serif font-bold text-sm text-esmeralda mb-1">Ubicación Física</h3>
         <p class="text-xs text-gray-600"><%= direccion %></p>
         <a href="https://www.google.com/maps/search/?api=1&amp;query=<%= encodeURIComponent(direccion) %>" target="_blank" rel="noopener" class="inline-block mt-3 text-xs font-bold text-esmeralda hover:underline">
@@ -26,7 +26,7 @@
       </div>
 
       <div class="bg-white p-6 rounded-2xl border border-gray-200 text-center shadow-sm">
-        <span class="text-3xl block mb-2">💬</span>
+        <span class="flex items-center justify-center w-12 h-12 mx-auto mb-3 rounded-full bg-esmeralda text-dorado"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg></span>
         <h3 class="font-serif font-bold text-sm text-esmeralda mb-1">WhatsApp Directo</h3>
         <p class="text-xs text-gray-600">Escríbenos y te asesoramos</p>
         <% if (cfg.telefono) { %>
@@ -38,7 +38,7 @@
       </div>
 
       <div class="bg-white p-6 rounded-2xl border border-gray-200 text-center shadow-sm">
-        <span class="text-3xl block mb-2">🕒</span>
+        <span class="flex items-center justify-center w-12 h-12 mx-auto mb-3 rounded-full bg-esmeralda text-dorado"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
         <h3 class="font-serif font-bold text-sm text-esmeralda mb-1">Horarios de Atención</h3>
         <p class="text-xs text-gray-600"><%= horario %></p>
       </div>
