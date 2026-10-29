@@ -56,10 +56,24 @@
     <div>
       <h4 class="text-white font-semibold text-xs uppercase tracking-wider mb-3">Atención al cliente</h4>
       <ul class="space-y-1.5 text-xs">
-        <li>📍 <%= cfg.direccion || 'Aguachica, Cesar, Colombia' %></li>
-        <li>📲 WhatsApp: <%= waTexto %></li>
-        <% if (cfg.telefono) { %><li>📞 Teléfono: <%= cfg.telefono %></li><% } %>
-        <li>🕒 <%= cfg.horario || 'Lunes a Sábado: 8:00 AM - 6:30 PM' %></li>
+                <li class="flex items-start gap-2.5">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4 text-dorado shrink-0 mt-px" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          <span><%= cfg.direccion || 'Aguachica, Cesar, Colombia' %></span>
+        </li>
+        <li class="flex items-start gap-2.5">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4 text-dorado shrink-0 mt-px" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg>
+          <span>WhatsApp: <%= waTexto %></span>
+        </li>
+        <% if (cfg.telefono) { %>
+        <li class="flex items-start gap-2.5">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4 text-dorado shrink-0 mt-px" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>Teléfono: <%= cfg.telefono %></span>
+        </li>
+        <% } %>
+        <li class="flex items-start gap-2.5">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4 text-dorado shrink-0 mt-px" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <span><%= cfg.horario || 'Lunes a Sábado: 8:00 AM - 6:30 PM' %></span>
+        </li>
       </ul>
     </div>
 
@@ -81,7 +95,7 @@
 <a href="https://wa.me/<%= wa %>?text=<%= encodeURIComponent('Hola, estoy visitando la página de Real Joyería Aguachica y quiero recibir información.') %>"
    target="_blank" rel="noopener" aria-label="Escribir por WhatsApp"
    class="fixed bottom-5 right-5 z-50 flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5A] text-white font-bold text-xs px-4 py-3 rounded-full shadow-lg transition-colors">
-  <span class="text-base">💬</span>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg>
   <span class="hidden sm:inline">WhatsApp</span>
 </a>
 

@@ -34,13 +34,14 @@
 <body class="bg-slate-50 text-gray-900 font-sans antialiased">
 
 <%
+    const ico = (d) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4 text-dorado shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
   const menuLinks = [
-    { text: 'Inicio', url: '/', icon: '👑' },
-    { text: 'Catálogo', url: '/catalogo', icon: '💎' },
-    { text: 'Esmeraldas', url: '/esmeraldas', icon: '💚' },
-    { text: 'Personaliza tu joya', url: '/personaliza', icon: '✨' },
-    { text: 'Financiación', url: '/financiacion', icon: '💳' },
-    { text: 'Contacto', url: '/contacto', icon: '📍' }
+    { text: 'Inicio', url: '/', icon: ico('<path d="M3 7l4.5 4.5L12 4l4.5 7.5L21 7l-2 10H5L3 7z"/><path d="M6 20.5h12"/>') },
+    { text: 'Catálogo', url: '/catalogo', icon: ico('<path d="M6 3h12l4 6-10 13L2 9z"/><path d="M11 3L8 9l4 13 4-13-3-6"/><path d="M2 9h20"/>') },
+    { text: 'Esmeraldas', url: '/esmeraldas', icon: ico('<path d="M8 3h8l5 5v8l-5 5H8l-5-5V8l5-5z"/><path d="M9 8h6l2 2v4l-2 2H9l-2-2v-4l2-2z"/>') },
+    { text: 'Personaliza tu joya', url: '/personaliza', icon: ico('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15v4M17 17h4"/>') },
+    { text: 'Financiación', url: '/financiacion', icon: ico('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/>') },
+    { text: 'Contacto', url: '/contacto', icon: ico('<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>') }
   ];
   const waHeader = 'https://wa.me/' + (typeof whatsappNumber !== 'undefined' ? whatsappNumber : '') +
     '?text=' + encodeURIComponent('Hola, estoy visitando la página de Real Joyería Aguachica y quiero recibir información.');
@@ -48,7 +49,7 @@
 
 <!-- Barra superior de anuncios -->
 <div class="bg-esmeralda-dark text-dorado-light text-xs py-2 text-center font-light tracking-widest uppercase px-4 border-b border-dorado/20">
-  <span>✨ Financiación directa disponible | Envíos seguros a Aguachica💎</span>
+  <span class="inline-flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-3.5 h-3.5 text-dorado shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15v4M17 17h4"/></svg>Financiación directa disponible | Envíos seguros a Aguachica<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-3.5 h-3.5 text-dorado shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M11 3L8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg></span>
 </div>
 
 <!-- Encabezado / Navegación principal -->
@@ -69,7 +70,7 @@
       <nav class="hidden md:flex items-center space-x-6 text-xs font-semibold uppercase tracking-wider">
         <% menuLinks.forEach(link => { %>
           <a href="<%= link.url %>" class="hover:text-dorado transition-colors flex items-center gap-1.5">
-            <span><%= link.icon %></span> <%= link.text %>
+            <span class="inline-flex"><%- link.icon %></span>
           </a>
         <% }) %>
       </nav>
@@ -97,7 +98,7 @@
     <div class="flex flex-col space-y-3 px-4 py-4 text-xs font-semibold uppercase tracking-wider">
       <% menuLinks.forEach(link => { %>
         <a href="<%= link.url %>" class="hover:text-dorado transition-colors flex items-center gap-2 py-1">
-          <span><%= link.icon %></span> <%= link.text %>
+          <span class="inline-flex"><%- link.icon %></span>
         </a>
       <% }) %>
 
