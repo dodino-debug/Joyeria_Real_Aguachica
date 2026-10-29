@@ -49,7 +49,7 @@
 
 <!-- Barra superior de anuncios -->
 <div class="bg-esmeralda-dark text-dorado-light text-xs py-2 text-center font-light tracking-widest uppercase px-4 border-b border-dorado/20">
-  <span class="inline-flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-3.5 h-3.5 text-dorado shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15v4M17 17h4"/></svg>Financiación directa disponible | Envíos seguros a Aguachica<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-3.5 h-3.5 text-dorado shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M11 3L8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg></span>
+  <span>✨ Financiación directa disponible | Envíos seguros a Aguachica💎</span>
 </div>
 
 <!-- Encabezado / Navegación principal -->
@@ -68,9 +68,9 @@
 
       <!-- MENÚ ESCRITORIO (PC) -->
       <nav class="hidden md:flex items-center space-x-6 text-xs font-semibold uppercase tracking-wider">
-        <% menuLinks.forEach(link => { %>
+          <% menuLinks.forEach(link => { %>
           <a href="<%= link.url %>" class="hover:text-dorado transition-colors flex items-center gap-1.5">
-            <span class="inline-flex"><%- link.icon %></span>
+            <span class="inline-flex"><%- link.icon %></span> <%= link.text %>
           </a>
         <% }) %>
       </nav>
@@ -96,9 +96,9 @@
   <!-- MENÚ MÓVIL DESPLEGABLE -->
   <div id="mobile-menu" class="hidden md:hidden bg-esmeralda border-t border-dorado/20">
     <div class="flex flex-col space-y-3 px-4 py-4 text-xs font-semibold uppercase tracking-wider">
-      <% menuLinks.forEach(link => { %>
+            <% menuLinks.forEach(link => { %>
         <a href="<%= link.url %>" class="hover:text-dorado transition-colors flex items-center gap-2 py-1">
-          <span class="inline-flex"><%- link.icon %></span>
+          <span class="inline-flex"><%- link.icon %></span> <%= link.text %>
         </a>
       <% }) %>
 
